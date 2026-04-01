@@ -1,0 +1,1303 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AVEX · Calculadora de Traslados</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<style>
+:root {
+  --black:#0B0B0B; --surface:#141414; --surface2:#1C1C1C; --surface3:#222;
+  --border:#2B2B2B; --accent:#22C55E; --accent-dim:#14532D;
+  --text:#F5F5F5; --muted:#737373;
+  --blue:#3B82F6; --blue-dim:#1E3A5F;
+  --orange:#F59E0B; --orange-dim:#451A03;
+  --purple:#A78BFA; --purple-dim:#2E1065;
+  --red:#EF4444;
+}
+body.light {
+  --black:#F0F2F5; --surface:#FFF; --surface2:#F5F7FA; --surface3:#EAEEF3;
+  --border:#D8DEE8; --text:#111827; --muted:#6B7280;
+  --accent-dim:#DCFCE7; --blue-dim:#DBEAFE; --orange-dim:#FEF3C7; --purple-dim:#EDE9FE;
+}
+body.light input { background:#F5F7FA; color:#111827; }
+body.light input::placeholder { color:#9CA3AF; }
+body.light .suggestions { background:#fff; border-color:#D8DEE8; }
+body.light .sug-item { color:#111827; border-bottom-color:#F0F2F5; }
+body.light .sug-item:hover { background:#F5F7FA; }
+body.light .brow.total { background:#F5F7FA; }
+body.light .brow.movida { background:#FEF9EC; }
+body.light .brow.neta { background:#F0F2F5!important; }
+body.light .brow.prestador { background:#F0FDF4; }
+body.light .brow.avex { background:#EFF6FF; }
+body.light .brow.iva { background:#F5F3FF; }
+body.light .brow-name { color:#111827; }
+body.light .brow-desc { color:#6B7280; }
+body.light .breakdown-card,.body.light .result-header-card { background:#fff; }
+body.light .res-price { color:#111827; }
+
+*,*::before,*::after{margin:0;padding:0;box-sizing:border-box;}
+body{background:var(--black);color:var(--text);font-family:'Inter',sans-serif;min-height:100vh;}
+
+/* ── NAV TABS ── */
+.app-nav {
+  position:sticky;top:0;z-index:200;
+  background:var(--surface);border-bottom:1px solid var(--border);
+  display:flex;align-items:center;padding:0 16px;gap:0;
+}
+.nav-logo { display:flex;align-items:center;gap:10px;padding:12px 16px 12px 0;border-right:1px solid var(--border);margin-right:8px; }
+.nav-logo img { height:24px; }
+.nav-logo-txt { font-size:16px;font-weight:700;letter-spacing:3px;color:var(--text);display:none; }
+.nav-tab {
+  padding:14px 16px;font-size:12px;font-weight:600;color:var(--muted);
+  cursor:pointer;border-bottom:2px solid transparent;transition:all .2s;
+  white-space:nowrap;letter-spacing:.5px;
+}
+.nav-tab:hover { color:var(--text); }
+.nav-tab.active { color:var(--accent);border-bottom-color:var(--accent); }
+.nav-spacer { flex:1; }
+.theme-toggle {
+  padding:7px 12px;border-radius:20px;border:1px solid var(--border);
+  background:var(--surface2);color:var(--muted);font-family:'Inter',sans-serif;
+  font-size:11px;font-weight:500;cursor:pointer;display:flex;align-items:center;gap:6px;transition:all .2s;
+}
+.theme-toggle:hover { border-color:var(--accent);color:var(--text); }
+
+/* ── PÁGINAS ── */
+.page { display:none; }
+.page.active { display:block; }
+
+/* ── CALCULADORA ── */
+.calc-wrap { max-width:780px;margin:0 auto;padding:24px 20px 60px;display:flex;flex-direction:column;gap:14px; }
+.card { background:var(--surface);border:1px solid var(--border);border-radius:6px;padding:24px 28px; }
+.sec-tag { display:inline-flex;align-items:center;gap:6px;font-size:10px;font-weight:600;letter-spacing:2px;text-transform:uppercase;color:var(--accent);margin-bottom:16px; }
+.sec-tag::before{content:'';width:6px;height:6px;background:var(--accent);border-radius:50%;display:inline-block;}
+.zone-row{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:14px;}
+.zone-pill{padding:7px 16px;border-radius:20px;border:1px solid var(--border);background:var(--surface2);color:var(--muted);font-size:12px;font-weight:500;cursor:pointer;transition:all .18s;user-select:none;}
+.zone-pill:hover{border-color:var(--accent);color:var(--text);}
+.zone-pill.active{background:var(--accent-dim);border-color:var(--accent);color:var(--accent);}
+.zone-note{font-size:11px;color:var(--muted);margin-top:-6px;margin-bottom:14px;padding-left:2px;}
+.route-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;}
+.field{display:flex;flex-direction:column;gap:6px;position:relative;}
+label{font-size:11px;font-weight:500;color:var(--muted);letter-spacing:.5px;text-transform:uppercase;}
+input{background:var(--surface2);border:1px solid var(--border);color:var(--text);font-family:'Inter',sans-serif;font-size:13px;padding:11px 14px;border-radius:5px;outline:none;transition:border-color .2s;width:100%;}
+input:focus{border-color:var(--accent);}
+input::placeholder{color:#404040;}
+.suggestions{position:absolute;top:calc(100% + 2px);left:0;right:0;background:#1e1e1e;border:1px solid var(--border);border-radius:5px;z-index:9999;max-height:180px;overflow-y:auto;box-shadow:0 8px 24px rgba(0,0,0,.5);}
+.sug-item{padding:10px 14px;font-size:12px;color:var(--text);cursor:pointer;border-bottom:1px solid #252525;line-height:1.4;transition:background .1s;}
+.sug-item:last-child{border-bottom:none;}
+.sug-item:hover{background:#252525;color:var(--accent);}
+.factura-row{display:flex;gap:8px;margin-bottom:0;}
+.fact-pill{padding:7px 20px;border-radius:20px;border:1px solid var(--border);background:var(--surface2);color:var(--muted);font-size:12px;font-weight:600;cursor:pointer;transition:all .18s;user-select:none;}
+.fact-pill:hover{border-color:var(--purple);color:var(--text);}
+.fact-pill.active{background:var(--purple-dim);border-color:var(--purple);color:var(--purple);}
+.fact-note{font-size:11px;color:var(--muted);padding-left:2px;}
+.btn{margin-top:16px;width:100%;background:var(--accent);border:none;color:#000;font-family:'Inter',sans-serif;font-size:13px;font-weight:600;letter-spacing:1px;text-transform:uppercase;padding:14px;cursor:pointer;transition:background .2s,transform .1s;border-radius:5px;}
+.btn:hover{background:#4ADE80;}
+.btn:active{transform:scale(.99);}
+.btn:disabled{background:#1a3d28;color:#3d7a55;cursor:not-allowed;transform:none;}
+.status{font-size:12px;color:var(--muted);text-align:center;padding:10px 0 0;display:none;}
+.status.visible{display:block;}
+
+/* RESULTADO */
+.result-wrap{display:none;flex-direction:column;gap:14px;}
+.result-wrap.visible{display:flex;animation:rise .35s ease;}
+@keyframes rise{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
+.result-header-card{background:var(--surface);border:1px solid var(--accent);border-radius:6px;padding:22px 28px;position:relative;overflow:hidden;}
+.result-header-card::before{content:'';position:absolute;top:0;left:0;width:100%;height:3px;background:var(--accent);}
+.result-top{display:flex;align-items:flex-end;justify-content:space-between;flex-wrap:wrap;gap:10px;}
+.res-label{font-size:10px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:1.5px;margin-bottom:4px;}
+.res-price{font-size:52px;font-weight:300;color:var(--text);line-height:1;}
+.res-cur{font-size:15px;color:var(--muted);margin-left:3px;}
+.res-badge{background:var(--accent-dim);color:var(--accent);font-size:11px;font-weight:600;letter-spacing:1px;padding:5px 12px;border-radius:20px;border:1px solid var(--accent);white-space:nowrap;}
+.res-stats{display:flex;gap:24px;flex-wrap:wrap;padding-top:16px;border-top:1px solid var(--border);margin-top:16px;}
+.stat{display:flex;flex-direction:column;gap:3px;}
+.stat-l{font-size:10px;text-transform:uppercase;letter-spacing:1px;color:var(--muted);font-weight:500;}
+.stat-v{font-size:13px;color:var(--text);font-weight:500;}
+
+/* BREAKDOWN */
+.breakdown-card{background:var(--surface);border:1px solid var(--border);border-radius:6px;overflow:hidden;}
+.breakdown-title{padding:14px 20px;border-bottom:1px solid var(--border);font-size:10px;font-weight:600;letter-spacing:2px;text-transform:uppercase;color:var(--muted);}
+.breakdown-rows{padding:8px 0;}
+.brow{display:grid;grid-template-columns:1fr auto;padding:10px 20px;align-items:center;gap:12px;border-bottom:1px solid #1a1a1a;}
+.brow:last-child{border-bottom:none;}
+.brow.total{background:var(--surface2);}
+.brow.movida{background:#1a1a0a;}
+.brow.neta{background:#1a1a1a!important;}
+.brow.prestador{background:#0d1f16;}
+.brow.avex{background:#0d1624;}
+.brow.iva{background:#1a1228;}
+.brow-left{display:flex;flex-direction:column;gap:2px;}
+.brow-name{font-size:13px;font-weight:500;color:var(--text);}
+.brow-desc{font-size:11px;color:var(--muted);}
+.brow-amount{font-size:16px;font-weight:600;text-align:right;white-space:nowrap;}
+.brow.total .brow-amount{color:var(--text);}
+.brow.movida .brow-amount{color:var(--orange);}
+.brow.neta .brow-amount{color:var(--text);}
+.brow.prestador .brow-amount{color:var(--accent);}
+.brow.avex .brow-amount{color:var(--blue);}
+.brow.iva .brow-amount{color:var(--purple);}
+.pct-bar-wrap{margin-top:4px;height:4px;background:var(--border);border-radius:2px;overflow:hidden;width:100%;}
+.pct-bar{height:100%;border-radius:2px;}
+
+/* MAPA */
+#map{width:100%;height:300px;border-radius:6px;}
+
+/* TABLA */
+.tabla-head{display:grid;grid-template-columns:2fr 1fr 1fr 1fr;padding:0 0 10px;border-bottom:1px solid var(--border);margin-bottom:2px;}
+.tabla-head span{font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:1.5px;color:var(--muted);}
+.tabla-row{display:grid;grid-template-columns:2fr 1fr 1fr 1fr;padding:11px 8px;border-radius:4px;transition:background .15s;align-items:center;border-bottom:1px solid #1a1a1a;}
+.tabla-row:last-child{border-bottom:none;}
+.tabla-row.active{background:#0d1f16;}
+.tabla-row span{font-size:12px;color:var(--text);}
+.tabla-row .price{font-weight:600;}
+.tabla-row.active .price{color:var(--accent);}
+.chip{display:inline-block;font-size:9px;font-weight:600;letter-spacing:1px;text-transform:uppercase;padding:3px 8px;border-radius:20px;background:var(--surface2);color:var(--muted);border:1px solid var(--border);}
+.chip.base{background:#0d1f16;color:var(--accent);border-color:var(--accent-dim);}
+.chip.active-chip{background:var(--accent-dim);color:var(--accent);border-color:var(--accent);}
+
+/* BOTONES ACCIÓN */
+.btn-presupuesto{width:100%;background:transparent;border:1px solid var(--accent);color:var(--accent);font-family:'Inter',sans-serif;font-size:13px;font-weight:600;letter-spacing:.5px;padding:14px 20px;cursor:pointer;border-radius:5px;transition:all .2s;display:flex;align-items:center;justify-content:center;gap:8px;}
+.btn-presupuesto:hover{background:#0d2018;}
+.btn-confirmar-viaje{margin-top:10px;width:100%;background:var(--accent);border:none;color:#000;font-family:'Inter',sans-serif;font-size:13px;font-weight:700;letter-spacing:.5px;padding:14px 20px;cursor:pointer;border-radius:5px;transition:all .2s;display:flex;align-items:center;justify-content:center;gap:8px;}
+.btn-confirmar-viaje:hover{opacity:.85;}
+
+/* MONITOR */
+.monitor-card{background:var(--surface);border:1px solid var(--accent);border-radius:8px;overflow:hidden;}
+.monitor-header{display:flex;align-items:flex-start;justify-content:space-between;padding:16px 20px;border-bottom:1px solid var(--border);gap:12px;}
+.monitor-title{font-size:13px;font-weight:700;color:var(--text);margin-bottom:3px;}
+.monitor-id{font-size:10px;color:var(--muted);letter-spacing:1px;}
+.monitor-estado{display:flex;align-items:center;gap:6px;white-space:nowrap;}
+.estado-dot{width:8px;height:8px;border-radius:50%;background:var(--accent);animation:mpulse 1.5s infinite;}
+.estado-dot.done{animation:none;background:var(--muted);}
+@keyframes mpulse{0%,100%{opacity:1;transform:scale(1)}50%{opacity:.5;transform:scale(1.3)}}
+#monitorEstadoTxt{font-size:12px;font-weight:600;color:var(--accent);}
+.link-box{padding:14px 20px;border-bottom:1px solid var(--border);}
+.link-label{font-size:9px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:var(--muted);margin-bottom:8px;}
+.link-row{display:flex;align-items:center;gap:8px;}
+.link-url{font-size:11px;color:var(--accent);background:var(--surface2);padding:8px 12px;border-radius:4px;border:1px solid var(--border);flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-family:monospace;}
+.btn-copy,.btn-wa{padding:8px 10px;border-radius:4px;border:1px solid var(--border);background:var(--surface2);color:var(--muted);cursor:pointer;flex-shrink:0;display:flex;align-items:center;transition:all .2s;}
+.btn-copy:hover{border-color:var(--accent);color:var(--accent);}
+.btn-wa{background:#14532d;border-color:var(--accent);color:var(--accent);}
+.btn-wa:hover{background:var(--accent);color:#000;}
+.monitor-steps{display:flex;align-items:center;padding:16px 20px;gap:0;overflow-x:auto;}
+.ms{display:flex;flex-direction:column;align-items:center;gap:4px;min-width:64px;}
+.ms-dot{width:20px;height:20px;border-radius:50%;border:2px solid var(--border);background:var(--surface2);transition:all .4s;}
+.ms.done .ms-dot{background:var(--accent);border-color:var(--accent);}
+.ms.active .ms-dot{border-color:var(--accent);background:var(--accent-dim);animation:mpulse 1.5s infinite;}
+.ms-label{font-size:9px;color:var(--muted);text-align:center;letter-spacing:.5px;}
+.ms.done .ms-label{color:var(--accent);}
+.ms.active .ms-label{color:var(--text);}
+.ms-time{font-size:9px;color:var(--muted);text-align:center;}
+.ms-line{flex:1;height:2px;background:var(--border);min-width:12px;transition:background .4s;}
+.ms-line.done{background:var(--accent);}
+.comprobante-box{margin:16px 20px;background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:18px;}
+.comprobante-title{font-size:14px;font-weight:700;color:var(--accent);margin-bottom:14px;text-align:center;}
+.comprobante-row{display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px solid var(--border);font-size:12px;}
+.comprobante-row:last-child{border-bottom:none;}
+.comprobante-row .cl{color:var(--muted);}
+.comprobante-row .cv{font-weight:600;color:var(--text);}
+.btn-comprobante-print{margin-top:14px;width:100%;padding:11px;border:1px solid var(--border);background:transparent;color:var(--text);font-family:'Inter',sans-serif;font-size:12px;font-weight:600;border-radius:5px;cursor:pointer;transition:all .2s;}
+.btn-comprobante-print:hover{border-color:var(--accent);color:var(--accent);}
+
+/* MODAL PRESUPUESTO */
+#modalOverlay{position:fixed;inset:0;background:rgba(0,0,0,.85);z-index:10000;display:none;align-items:flex-start;justify-content:center;padding:32px 16px;overflow-y:auto;}
+#modalOverlay.open{display:flex;}
+#modalBox{background:var(--surface);border:1px solid var(--border);border-radius:8px;width:100%;max-width:680px;overflow:hidden;box-shadow:0 24px 64px rgba(0,0,0,.6);}
+#printArea{padding:40px 48px;font-family:'Inter',sans-serif;color:var(--text);background:var(--surface);}
+.modal-actions{padding:16px 24px;background:var(--surface2);border-top:1px solid var(--border);display:flex;gap:10px;justify-content:flex-end;}
+.btn-print{background:var(--accent);color:#000;border:none;border-radius:5px;font-family:'Inter',sans-serif;font-size:12px;font-weight:700;padding:10px 18px;cursor:pointer;display:flex;align-items:center;gap:7px;letter-spacing:.5px;}
+.btn-print:hover{opacity:.85;}
+.btn-close-modal{background:transparent;color:var(--muted);border:1px solid var(--border);border-radius:5px;font-family:'Inter',sans-serif;font-size:12px;padding:10px 16px;cursor:pointer;}
+.btn-close-modal:hover{background:var(--surface2);}
+.pres-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:28px;padding-bottom:20px;border-bottom:2px solid var(--accent);}
+.pres-logo{height:32px;}
+.pres-logo-txt{font-size:22px;font-weight:700;letter-spacing:4px;color:var(--text);}
+.pres-meta{text-align:right;font-size:11px;color:var(--muted);line-height:1.8;}
+.pres-meta strong{color:var(--text);}
+.pres-title{font-size:18px;font-weight:700;color:var(--text);margin-bottom:4px;}
+.pres-subtitle{font-size:12px;color:var(--muted);margin-bottom:24px;}
+.pres-section{margin-bottom:22px;}
+.pres-sec-label{font-size:9px;font-weight:700;letter-spacing:2.5px;text-transform:uppercase;color:var(--accent);margin-bottom:8px;}
+.pres-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;}
+.pres-field{background:var(--surface2);border:1px solid var(--border);border-radius:4px;padding:10px 14px;}
+.pres-field-label{font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:1px;margin-bottom:2px;}
+.pres-field-value{font-size:13px;font-weight:600;color:var(--text);}
+.pres-map-box{width:100%;height:220px;border-radius:6px;overflow:hidden;margin-bottom:22px;border:1px solid var(--border);}
+.pres-total-box{background:var(--accent);border-radius:6px;padding:20px 24px;display:flex;align-items:center;justify-content:space-between;margin-bottom:20px;}
+.pres-total-label{font-size:11px;text-transform:uppercase;letter-spacing:1.5px;color:rgba(0,0,0,.6);margin-bottom:4px;}
+.pres-total-price{font-size:36px;font-weight:700;color:#000;}
+.pres-total-cur{font-size:14px;color:rgba(0,0,0,.5);margin-left:4px;}
+.pres-total-right{text-align:right;}
+.pres-total-tipo{background:rgba(0,0,0,.15);color:#000;font-size:11px;font-weight:700;padding:4px 12px;border-radius:20px;letter-spacing:1px;display:inline-block;margin-bottom:6px;}
+.pres-total-fact{font-size:11px;color:rgba(0,0,0,.55);}
+.pres-detail-row{display:flex;justify-content:space-between;padding:9px 0;border-bottom:1px solid var(--border);font-size:12px;}
+.pres-detail-row:last-child{border-bottom:none;}
+.pres-detail-row .label{color:var(--muted);}
+.pres-detail-row .value{font-weight:600;color:var(--text);}
+.pres-footer{margin-top:24px;padding-top:16px;border-top:1px solid var(--border);font-size:10px;color:var(--muted);text-align:center;line-height:1.8;}
+.pres-footer strong{color:var(--accent);}
+
+/* ── HISTORIAL ── */
+.hist-wrap{max-width:780px;margin:0 auto;padding:24px 20px 60px;display:flex;flex-direction:column;gap:14px;}
+.hist-top{display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px;}
+.hist-top h2{font-size:16px;font-weight:700;color:var(--text);}
+.hist-stats{display:flex;gap:10px;flex-wrap:wrap;}
+.hist-stat{background:var(--surface);border:1px solid var(--border);border-radius:6px;padding:12px 16px;min-width:120px;}
+.hist-stat-label{font-size:9px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:var(--muted);margin-bottom:4px;}
+.hist-stat-value{font-size:20px;font-weight:700;color:var(--text);}
+.hist-stat-value.green{color:var(--accent);}
+.hist-stat-value.blue{color:var(--blue);}
+.hist-empty{text-align:center;padding:60px 20px;color:var(--muted);}
+.hist-empty-icon{font-size:40px;margin-bottom:12px;}
+.hist-empty p{font-size:13px;margin-top:6px;}
+.hist-viaje{background:var(--surface);border:1px solid var(--border);border-radius:8px;overflow:hidden;transition:border-color .2s;}
+.hist-viaje:hover{border-color:var(--accent);}
+.hist-viaje-header{display:flex;align-items:center;gap:12px;padding:14px 18px;cursor:pointer;}
+.hist-viaje-id{font-size:10px;font-weight:700;letter-spacing:2px;color:var(--muted);font-family:monospace;}
+.hist-viaje-ruta{flex:1;font-size:13px;font-weight:600;color:var(--text);}
+.hist-viaje-ruta span{color:var(--muted);font-weight:400;}
+.hist-estado-badge{font-size:9px;font-weight:700;letter-spacing:1px;padding:3px 10px;border-radius:20px;text-transform:uppercase;white-space:nowrap;}
+.hist-estado-badge.pendiente{background:#1a1a0a;color:var(--orange);border:1px solid var(--orange);}
+.hist-estado-badge.en-camino,.hist-estado-badge.en-origen,.hist-estado-badge.en-destino,.hist-estado-badge.cobro{background:#0d1f16;color:var(--accent);border:1px solid var(--accent);}
+.hist-estado-badge.completado{background:var(--accent-dim);color:var(--accent);border:1px solid var(--accent);}
+.hist-viaje-body{display:none;border-top:1px solid var(--border);padding:14px 18px;}
+.hist-viaje.expanded .hist-viaje-body{display:block;}
+.hist-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:14px;}
+.hist-cell{background:var(--surface2);border-radius:4px;padding:10px 12px;}
+.hist-cell-label{font-size:9px;color:var(--muted);text-transform:uppercase;letter-spacing:1px;margin-bottom:2px;}
+.hist-cell-value{font-size:12px;font-weight:600;color:var(--text);}
+.hist-cell-value.green{color:var(--accent);}
+.hist-cell-value.blue{color:var(--blue);}
+.hist-actions{display:flex;gap:8px;flex-wrap:wrap;}
+.hist-btn{padding:8px 14px;border-radius:5px;border:1px solid var(--border);background:var(--surface2);color:var(--muted);font-family:'Inter',sans-serif;font-size:11px;font-weight:600;cursor:pointer;transition:all .2s;}
+.hist-btn:hover{border-color:var(--accent);color:var(--accent);}
+.hist-btn.danger:hover{border-color:var(--red);color:var(--red);}
+.hist-btn-clear{padding:8px 16px;border-radius:5px;border:1px solid var(--border);background:transparent;color:var(--muted);font-family:'Inter',sans-serif;font-size:11px;font-weight:600;cursor:pointer;transition:all .2s;}
+.hist-btn-clear:hover{border-color:var(--red);color:var(--red);}
+
+/* ── MODO PRESTADOR ── */
+#modoPrestador{display:none;min-height:100vh;flex-direction:column;}
+#modoPrestador.active{display:flex;}
+.p-header{background:var(--surface);border-bottom:1px solid var(--border);padding:14px 20px;display:flex;align-items:center;gap:12px;position:sticky;top:0;z-index:100;}
+.p-header img{height:26px;}
+.p-header-sep{width:1px;height:22px;background:var(--border);}
+.p-header-title{font-size:12px;color:var(--muted);letter-spacing:1px;text-transform:uppercase;flex:1;}
+.p-badge{font-size:10px;font-weight:700;letter-spacing:1px;padding:4px 10px;border-radius:20px;text-transform:uppercase;white-space:nowrap;}
+.p-badge.pendiente{background:#1a1a0a;color:var(--orange);border:1px solid var(--orange);}
+.p-badge.en-camino{background:#0d1f16;color:var(--accent);border:1px solid var(--accent);animation:ppulse 2s infinite;}
+.p-badge.en-origen{background:#1e3a5f;color:var(--blue);border:1px solid var(--blue);}
+.p-badge.en-destino,.p-badge.cobro{background:#0d1f16;color:var(--accent);border:1px solid var(--accent);}
+.p-badge.completado{background:#1a1a1a;color:var(--muted);border:1px solid var(--border);}
+@keyframes ppulse{0%,100%{opacity:1}50%{opacity:.5}}
+.p-content{padding:16px;max-width:500px;width:100%;margin:0 auto;display:flex;flex-direction:column;gap:12px;padding-bottom:100px;}
+.p-card{background:var(--surface);border:1px solid var(--border);border-radius:8px;overflow:hidden;}
+.p-card-title{padding:12px 16px;border-bottom:1px solid var(--border);font-size:10px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:var(--muted);}
+.p-row{display:flex;gap:10px;padding:11px 16px;border-bottom:1px solid #1a1a1a;align-items:flex-start;}
+.p-row:last-child{border-bottom:none;}
+.p-row-icon{font-size:16px;margin-top:1px;flex-shrink:0;}
+.p-row-label{font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:1px;margin-bottom:1px;}
+.p-row-value{font-size:13px;font-weight:500;color:var(--text);}
+.p-row-sub{font-size:11px;color:var(--muted);}
+#p-map{width:100%;height:220px;}
+.p-total{background:var(--accent);border-radius:8px;padding:16px 18px;display:flex;align-items:center;justify-content:space-between;}
+.p-total-label{font-size:10px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:rgba(0,0,0,.6);margin-bottom:2px;}
+.p-total-price{font-size:30px;font-weight:700;color:#000;}
+.p-total-cur{font-size:12px;color:rgba(0,0,0,.5);margin-left:3px;}
+.p-total-right{text-align:right;font-size:11px;color:rgba(0,0,0,.6);}
+.p-total-parte{font-size:14px;font-weight:700;color:#000;}
+.p-tl{padding:14px 16px;display:flex;flex-direction:column;gap:0;}
+.p-tl-step{display:flex;gap:12px;position:relative;}
+.p-tl-step:not(:last-child)::after{content:'';position:absolute;left:13px;top:28px;width:2px;height:calc(100% - 4px);background:var(--border);z-index:0;}
+.p-tl-step.done::after{background:var(--accent);}
+.p-tl-dot{width:28px;height:28px;border-radius:50%;border:2px solid var(--border);background:var(--surface2);display:flex;align-items:center;justify-content:center;font-size:12px;flex-shrink:0;z-index:1;transition:all .3s;}
+.p-tl-step.done .p-tl-dot{background:var(--accent);border-color:var(--accent);color:#000;}
+.p-tl-step.active .p-tl-dot{border-color:var(--accent);background:var(--accent-dim);animation:ppulse 1.5s infinite;}
+.p-tl-body{padding-bottom:18px;}
+.p-tl-label{font-size:12px;font-weight:600;color:var(--text);}
+.p-tl-step.done .p-tl-label{color:var(--accent);}
+.p-tl-time{font-size:10px;color:var(--muted);margin-top:2px;}
+.p-cobro-card{background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:18px 16px;}
+.p-cobro-title{font-size:14px;font-weight:700;color:var(--text);margin-bottom:4px;}
+.p-cobro-sub{font-size:11px;color:var(--muted);margin-bottom:14px;}
+.p-cobro-opts{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:14px;}
+.p-cobro-opt{padding:16px 10px;border-radius:8px;border:2px solid var(--border);background:var(--surface2);cursor:pointer;text-align:center;transition:all .2s;}
+.p-cobro-opt:hover{border-color:var(--accent);}
+.p-cobro-opt.selected{border-color:var(--accent);background:var(--accent-dim);}
+.p-cobro-opt-icon{font-size:26px;margin-bottom:6px;}
+.p-cobro-opt-label{font-size:12px;font-weight:700;color:var(--text);}
+.p-cobro-opt-desc{font-size:10px;color:var(--muted);margin-top:2px;}
+.p-btn-confirmar{width:100%;padding:14px;border:none;border-radius:8px;background:var(--accent);color:#000;font-family:'Inter',sans-serif;font-size:14px;font-weight:700;cursor:pointer;display:none;transition:opacity .2s;}
+.p-btn-confirmar:hover{opacity:.85;}
+.p-done-card{background:var(--surface);border:2px solid var(--accent);border-radius:8px;padding:28px 18px;text-align:center;}
+.p-done-icon{font-size:52px;margin-bottom:10px;}
+.p-done-title{font-size:20px;font-weight:700;color:var(--accent);margin-bottom:6px;}
+.p-done-sub{font-size:12px;color:var(--muted);margin-bottom:18px;}
+.p-res-row{display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px solid var(--border);font-size:12px;text-align:left;}
+.p-res-row:last-child{border-bottom:none;}
+.p-res-l{color:var(--muted);}
+.p-res-v{font-weight:600;color:var(--text);}
+.p-nav{position:fixed;bottom:0;left:0;right:0;background:var(--surface);border-top:1px solid var(--border);padding:12px 16px 24px;}
+.p-btn-accion{width:100%;padding:18px;border:none;border-radius:8px;font-family:'Inter',sans-serif;font-size:15px;font-weight:700;cursor:pointer;transition:all .2s;display:flex;align-items:center;justify-content:center;gap:10px;}
+.p-btn-accion.iniciar{background:var(--accent);color:#000;}
+.p-btn-accion.origen{background:var(--blue);color:#fff;}
+.p-btn-accion.destino{background:var(--orange);color:#000;}
+.p-btn-accion:hover{opacity:.88;}
+
+/* PRINT */
+@media print{
+  body *{visibility:hidden;}
+  #modalOverlay,#modalOverlay *{visibility:visible;}
+  #modalOverlay{position:absolute;top:0;left:0;padding:0;background:var(--black);}
+  #modalBox{box-shadow:none;border-radius:0;width:100%;max-width:100%;}
+  .no-print{display:none!important;}
+  #printArea{padding:24px 32px;}
+  .pres-map-box{height:200px;}
+}
+@media(max-width:540px){
+  .route-grid{grid-template-columns:1fr;}
+  .tabla-head,.tabla-row{grid-template-columns:2fr 1fr 1fr;}
+  .tabla-head span:last-child,.tabla-row span:last-child{display:none;}
+  .res-price{font-size:40px;}
+  .card,.result-header-card{padding:18px;}
+  .brow{padding:10px 14px;}
+  .hist-grid{grid-template-columns:1fr 1fr;}
+}
+</style>
+</head>
+<body>
+
+<!-- MODO PRESTADOR -->
+<div id="modoPrestador">
+  <div class="p-header">
+    <img src="https://avexargentina.com/logo_avex.png" alt="AVEX" onerror="this.style.display='none'">
+    <div class="p-header-sep"></div>
+    <span class="p-header-title">Panel del Prestador</span>
+    <div class="p-badge pendiente" id="pBadge">Pendiente</div>
+  </div>
+  <div class="p-content" id="pContent">
+    <p style="color:var(--muted);text-align:center;padding:40px 0;">Cargando viaje...</p>
+  </div>
+  <div class="p-nav" id="pNav" style="display:none;">
+    <button class="p-btn-accion iniciar" id="pBtnAccion" onclick="pAccion()">
+      <span id="pBtnIcon">🚗</span><span id="pBtnTxt">Iniciar viaje al origen</span>
+    </button>
+  </div>
+</div>
+
+<!-- MODO AVEX -->
+<div id="modoAvex">
+
+<!-- NAV -->
+<nav class="app-nav">
+  <div class="nav-logo">
+    <img src="https://avexargentina.com/logo_avex.png" alt="AVEX"
+      onerror="this.style.display='none';document.getElementById('nlf').style.display='block'">
+    <span id="nlf" class="nav-logo-txt">AVEX</span>
+  </div>
+  <div class="nav-tab active" onclick="showPage('pageCalc',this)">Calculadora</div>
+  <div class="nav-tab" onclick="showPage('pageHistorial',this)" id="tabHistorial">Historial <span id="histCount" style="background:var(--accent);color:#000;font-size:9px;font-weight:700;padding:1px 6px;border-radius:10px;margin-left:4px;display:none;">0</span></div>
+  <div class="nav-spacer"></div>
+  <button class="theme-toggle" onclick="toggleTheme()">
+    <span id="themeIcon">☀️</span><span id="themeLabel">Día</span>
+  </button>
+</nav>
+
+<!-- CALCULADORA -->
+<div class="page active" id="pageCalc">
+<div class="calc-wrap">
+
+  <div class="card">
+    <div class="sec-tag">01 — Zona de operación</div>
+    <div class="zone-row" id="zonePills">
+      <div class="zone-pill active" data-zone="caba" onclick="setZona(this)">CABA</div>
+      <div class="zone-pill" data-zone="norte_cercano" onclick="setZona(this)">Zona Norte · hasta Tortuguitas</div>
+      <div class="zone-pill" data-zone="norte_lejano" onclick="setZona(this)">Pilar / Tigre</div>
+    </div>
+    <div class="zone-note">Movida del prestador: <span id="movimientoLabel">$17.000</span></div>
+
+    <div class="sec-tag" style="margin-top:4px;">02 — Tipo de factura</div>
+    <div class="factura-row">
+      <div class="fact-pill" data-fact="C" onclick="setFactura(this)">Factura C</div>
+      <div class="fact-pill active" data-fact="A" onclick="setFactura(this)">Factura A · +21% IVA</div>
+    </div>
+    <div class="fact-note" id="factNote" style="margin-top:8px;margin-bottom:16px;">Factura A: el IVA se suma al presupuesto y se descuenta en el desglose.</div>
+
+    <div class="sec-tag">03 — Origen y destino</div>
+    <div class="route-grid">
+      <div class="field">
+        <label>Origen <span style="color:var(--muted);font-weight:400;text-transform:none;letter-spacing:0;">(escribí la dirección completa)</span></label>
+        <input type="text" id="origenInput" placeholder="Ej: Viamonte 300, CABA" autocomplete="off" oninput="suggest(this,'origenList')">
+        <div class="suggestions" id="origenList"></div>
+      </div>
+      <div class="field">
+        <label>Destino <span style="color:var(--muted);font-weight:400;text-transform:none;letter-spacing:0;">(escribí la dirección completa)</span></label>
+        <input type="text" id="destinoInput" placeholder="Ej: Av. Maipú 1300, Vicente López" autocomplete="off" oninput="suggest(this,'destinoList')">
+        <div class="suggestions" id="destinoList"></div>
+      </div>
+    </div>
+    <div style="font-size:11px;color:var(--muted);margin-top:6px;margin-bottom:4px;">
+      💡 Si no aparecen sugerencias, escribí la dirección completa igual y presioná Calcular — el sistema la va a encontrar.
+    </div>
+
+    <div class="sec-tag" style="margin-top:20px;">04 — Cliente y vehículo</div>
+    <div class="route-grid" style="margin-bottom:12px;">
+      <div class="field"><label>Cliente / Empresa</label><input type="text" id="clienteInput" placeholder="Ej: Juan García"></div>
+      <div class="field"><label>Teléfono / WhatsApp</label><input type="text" id="telefonoInput" placeholder="Ej: 11 5555-0000"></div>
+    </div>
+    <div class="route-grid">
+      <div class="field"><label>Vehículo (marca y modelo)</label><input type="text" id="vehiculoInput" placeholder="Ej: Toyota Corolla"></div>
+      <div class="field"><label>Patente</label><input type="text" id="patenteInput" placeholder="Ej: AB 123 CD" style="text-transform:uppercase;"></div>
+    </div>
+
+    <div class="sec-tag" style="margin-top:20px;">05 — Datos del prestador</div>
+    <div class="route-grid" style="margin-bottom:12px;">
+      <div class="field"><label>Nombre del prestador</label><input type="text" id="prestadorNombreInput" placeholder="Ej: Carlos Rodríguez"></div>
+      <div class="field"><label>Teléfono del prestador</label><input type="text" id="prestadorTelInput" placeholder="Ej: 11 4444-5555"></div>
+    </div>
+    <div class="route-grid">
+      <div class="field"><label>Vehículo del prestador</label><input type="text" id="prestadorVehiculoInput" placeholder="Ej: Ford Transit Blanca"></div>
+      <div class="field"><label>Patente del prestador</label><input type="text" id="prestadorPatenteInput" placeholder="Ej: AC 456 EF" style="text-transform:uppercase;"></div>
+    </div>
+
+    <button class="btn" id="btnCalc" onclick="calcularRuta()">Calcular tarifa y revenue →</button>
+    <div class="status" id="status"></div>
+  </div>
+
+  <!-- RESULTADO -->
+  <div class="result-wrap" id="resultWrap">
+    <div class="result-header-card">
+      <div class="result-top">
+        <div>
+          <div class="res-label" id="rPriceLabel">Total al cliente (c/ IVA)</div>
+          <div><span class="res-price" id="rPrice">—</span><span class="res-cur">ARS</span></div>
+        </div>
+        <div class="res-badge" id="rTipo">—</div>
+      </div>
+      <div class="res-stats">
+        <div class="stat"><span class="stat-l">Distancia</span><span class="stat-v" id="rKm">—</span></div>
+        <div class="stat"><span class="stat-l">Tramo</span><span class="stat-v" id="rTramo">—</span></div>
+        <div class="stat"><span class="stat-l">Tiempo estimado</span><span class="stat-v" id="rTiempo">—</span></div>
+        <div class="stat"><span class="stat-l">Zona</span><span class="stat-v" id="rZona">—</span></div>
+      </div>
+    </div>
+    <div class="breakdown-card">
+      <div class="breakdown-title">Desglose de revenue</div>
+      <div class="breakdown-rows">
+        <div class="brow total"><div class="brow-left"><span class="brow-name">Tarifa base</span><span class="brow-desc">Precio del servicio sin impuestos</span></div><span class="brow-amount" id="bBruta">—</span></div>
+        <div class="brow iva" id="browIva"><div class="brow-left"><span class="brow-name">+ IVA 21%</span><span class="brow-desc">Factura A — se cobra al cliente</span></div><span class="brow-amount" id="bIva">—</span></div>
+        <div class="brow total" style="border-top:1px solid #2b2b2b;"><div class="brow-left"><span class="brow-name">Total al cliente</span><span class="brow-desc" id="bTotalDesc">Tarifa + IVA</span></div><span class="brow-amount" id="bTotal" style="font-size:18px;">—</span></div>
+        <div class="brow movida"><div class="brow-left"><span class="brow-name">− Movida del prestador</span><span class="brow-desc" id="bMovidaDesc">Costo de desplazamiento</span></div><span class="brow-amount" id="bMovida">—</span></div>
+        <div class="brow neta" style="background:#1a1a1a;"><div class="brow-left"><span class="brow-name">Base neta</span><span class="brow-desc">Sobre esta se divide el revenue</span></div><span class="brow-amount" id="bNeta">—</span></div>
+        <div class="brow prestador"><div class="brow-left"><span class="brow-name">Prestador · 60%</span><span class="brow-desc">Su ganancia por el servicio</span><div class="pct-bar-wrap"><div class="pct-bar" style="width:60%;background:#22C55E;"></div></div></div><span class="brow-amount" id="bPrestador">—</span></div>
+        <div class="brow avex"><div class="brow-left"><span class="brow-name">AVEX · 40%</span><span class="brow-desc">Revenue de la plataforma</span><div class="pct-bar-wrap"><div class="pct-bar" style="width:40%;background:#3B82F6;"></div></div></div><span class="brow-amount" id="bAvex">—</span></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- BOTONES -->
+  <div id="btnPresupuestoWrap" style="display:none;">
+    <button class="btn-presupuesto" onclick="abrirPresupuesto()">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
+      Generar presupuesto para el cliente
+    </button>
+    <button class="btn-confirmar-viaje" onclick="confirmarViaje()">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg>
+      Confirmar viaje y generar link al prestador
+    </button>
+  </div>
+
+  <!-- MONITOR -->
+  <div id="monitorPanel" style="display:none;">
+    <div class="monitor-card">
+      <div class="monitor-header">
+        <div><div class="monitor-title">Viaje en curso</div><div class="monitor-id" id="monitorId">—</div></div>
+        <div class="monitor-estado"><span class="estado-dot" id="estadoDot"></span><span id="monitorEstadoTxt">Pendiente</span></div>
+      </div>
+      <div class="link-box">
+        <div class="link-label">Link del prestador</div>
+        <div class="link-row">
+          <div class="link-url" id="linkUrl">—</div>
+          <button class="btn-copy" onclick="copiarLink()" title="Copiar"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg></button>
+          <button class="btn-wa" onclick="compartirWA()" title="WhatsApp"><svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347z"/><path d="M11.999 2C6.477 2 2 6.477 2 11.999c0 1.99.583 3.85 1.59 5.415L2 22l4.713-1.56A9.953 9.953 0 0011.999 22C17.522 22 22 17.522 22 11.999 22 6.477 17.522 2 11.999 2z"/></svg></button>
+        </div>
+      </div>
+      <div class="monitor-steps">
+        <div class="ms" id="ms-pendiente"><div class="ms-dot"></div><div class="ms-label">Pendiente</div><div class="ms-time" id="mst-pendiente">—</div></div>
+        <div class="ms-line" id="msl-0"></div>
+        <div class="ms" id="ms-en-camino"><div class="ms-dot"></div><div class="ms-label">En camino</div><div class="ms-time" id="mst-en-camino">—</div></div>
+        <div class="ms-line" id="msl-1"></div>
+        <div class="ms" id="ms-en-origen"><div class="ms-dot"></div><div class="ms-label">En origen</div><div class="ms-time" id="mst-en-origen">—</div></div>
+        <div class="ms-line" id="msl-2"></div>
+        <div class="ms" id="ms-en-destino"><div class="ms-dot"></div><div class="ms-label">En destino</div><div class="ms-time" id="mst-en-destino">—</div></div>
+        <div class="ms-line" id="msl-3"></div>
+        <div class="ms" id="ms-completado"><div class="ms-dot"></div><div class="ms-label">Completado</div><div class="ms-time" id="mst-completado">—</div></div>
+      </div>
+      <div id="monitorComprobante" style="display:none;">
+        <div class="comprobante-box">
+          <div class="comprobante-title">✅ Viaje completado</div>
+          <div id="comprobanteRows"></div>
+          <button class="btn-comprobante-print" onclick="window.print()">🖨️ Imprimir comprobante</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- MAPA -->
+  <div class="card" style="padding:0;overflow:hidden;"><div id="map"></div></div>
+
+  <!-- TABLA -->
+  <div class="card">
+    <div class="sec-tag">Estructura tarifaria completa</div>
+    <div class="tabla-head"><span>Distancia</span><span>Tarifa</span><span>AVEX 40%</span><span>Tramo</span></div>
+    <div id="tablaBody"></div>
+  </div>
+
+</div>
+</div>
+
+<!-- HISTORIAL -->
+<div class="page" id="pageHistorial">
+<div class="hist-wrap">
+  <div class="hist-top">
+    <h2>Historial de viajes</h2>
+    <button class="hist-btn-clear" onclick="limpiarHistorial()">Limpiar historial</button>
+  </div>
+  <div id="histStats" style="display:flex;gap:10px;flex-wrap:wrap;"></div>
+  <div id="histLista"></div>
+</div>
+</div>
+
+</div><!-- /modoAvex -->
+
+<!-- MODAL PRESUPUESTO -->
+<div id="modalOverlay">
+  <div id="modalBox">
+    <div id="printArea"></div>
+    <div class="modal-actions no-print">
+      <button class="btn-print" onclick="window.print()">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 6 2 18 2 18 9"/><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/><rect x="6" y="14" width="12" height="8"/></svg>
+        Imprimir / PDF
+      </button>
+      <button class="btn-close-modal" onclick="cerrarPresupuesto()">✕ Cerrar</button>
+    </div>
+  </div>
+</div>
+
+<script>
+// ── CONFIG ────────────────────────────────────────────────────
+const TARIFAS = [
+  {max:10,       precio:70000,  label:'Hasta 10 km',  tipo:'Entrada'  },
+  {max:15,       precio:90000,  label:'Hasta 15 km',  tipo:'Base'     },
+  {max:20,       precio:110000, label:'Hasta 20 km',  tipo:'Estándar' },
+  {max:30,       precio:130000, label:'Hasta 30 km',  tipo:'Extendido'},
+  {max:Infinity, precio:150000, label:'Más de 30 km', tipo:'Premium'  },
+];
+const MOVIDA = {
+  caba:          {monto:17000, label:'$17.000 (CABA)'},
+  norte_cercano: {monto:17000, label:'$17.000 (Zona Norte hasta Tortuguitas)'},
+  norte_lejano:  {monto:20000, label:'$20.000 (Pilar / Tigre)'},
+};
+const ZONA_NOMBRES = {caba:'CABA', norte_cercano:'Zona Norte · hasta Tortuguitas', norte_lejano:'Pilar / Tigre'};
+const M_ORDEN = ['pendiente','en-camino','en-origen','en-destino','cobro','completado'];
+
+let zonaActual = 'caba';
+let facturaActual = 'A';
+
+// ── HELPERS ───────────────────────────────────────────────────
+const fmt = n => '$' + Math.round(n).toLocaleString('es-AR');
+const fmtMin = s => { const m=Math.round(s/60); return m>=60?Math.floor(m/60)+'h '+(m%60)+'min':m+' min'; };
+const getTarifa = km => TARIFAS.find(t => km <= t.max);
+
+// ── TABS ──────────────────────────────────────────────────────
+function showPage(id, tab) {
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.nav-tab').forEach(t => t.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+  tab.classList.add('active');
+  if (id === 'pageHistorial') renderHistorial();
+}
+
+// ── TEMA ──────────────────────────────────────────────────────
+function toggleTheme() {
+  const isLight = document.body.classList.toggle('light');
+  document.getElementById('themeLabel').textContent = isLight ? 'Noche' : 'Día';
+  document.getElementById('themeIcon').textContent  = isLight ? '🌙' : '☀️';
+  map.eachLayer(l => { if (l._url) map.removeLayer(l); });
+  L.tileLayer(isLight
+    ? 'https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png'
+    : 'https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png',
+    {attribution:'© OpenStreetMap © CARTO',maxZoom:19}).addTo(map);
+  localStorage.setItem('avex-theme', isLight ? 'light' : 'dark');
+}
+
+// ── ZONA ──────────────────────────────────────────────────────
+function setZona(el) {
+  document.querySelectorAll('.zone-pill').forEach(p => p.classList.remove('active'));
+  el.classList.add('active');
+  zonaActual = el.dataset.zone;
+  document.getElementById('movimientoLabel').textContent = fmt(MOVIDA[zonaActual].monto);
+  renderTabla(-1);
+  if (document.getElementById('resultWrap').classList.contains('visible')) {
+    const km = parseFloat(document.getElementById('rKm').textContent);
+    if (!isNaN(km)) updateRevenue(km);
+  }
+}
+
+// ── FACTURA ───────────────────────────────────────────────────
+function setFactura(el) {
+  document.querySelectorAll('.fact-pill').forEach(p => p.classList.remove('active'));
+  el.classList.add('active');
+  facturaActual = el.dataset.fact;
+  document.getElementById('factNote').textContent = facturaActual === 'A'
+    ? 'Factura A: el IVA se suma al presupuesto y se descuenta en el desglose.'
+    : 'Factura C: sin IVA. La tarifa es el total final al cliente.';
+  renderTabla(-1);
+  if (document.getElementById('resultWrap').classList.contains('visible')) {
+    const km = parseFloat(document.getElementById('rKm').textContent);
+    if (!isNaN(km)) updateRevenue(km);
+  }
+}
+
+// ── TABLA ─────────────────────────────────────────────────────
+function renderTabla(activeIdx) {
+  const movida = MOVIDA[zonaActual].monto;
+  document.getElementById('tablaBody').innerHTML = TARIFAS.map((t,i) => {
+    const iva   = facturaActual === 'A' ? t.precio * 0.21 : 0;
+    const total = t.precio + iva;
+    const neta  = Math.max(0, t.precio - movida);
+    const avex  = neta * 0.4;
+    const active = i === activeIdx;
+    return `<div class="tabla-row${active?' active':''}" id="row${i}">
+      <span>${t.label}</span>
+      <span class="price">${fmt(total)}${iva>0?'<span style="font-size:9px;color:#A78BFA;margin-left:4px;">+IVA</span>':''}</span>
+      <span class="price" style="color:${active?'var(--blue)':'var(--muted)'}">${fmt(avex)}</span>
+      <span><div class="chip${t.tipo==='Base'?' base':''}${active?' active-chip':''}">${t.tipo}</div></span>
+    </div>`;
+  }).join('');
+}
+renderTabla(-1);
+
+// ── REVENUE ───────────────────────────────────────────────────
+function updateRevenue(km) {
+  const t     = getTarifa(km);
+  const idx   = TARIFAS.indexOf(t);
+  const movida = MOVIDA[zonaActual].monto;
+  const iva   = facturaActual === 'A' ? t.precio * 0.21 : 0;
+  const total = t.precio + iva;
+  const neta  = Math.max(0, t.precio - movida);
+  const prest = neta * 0.6;
+  const avex  = neta * 0.4;
+  document.getElementById('rPrice').textContent      = fmt(total);
+  document.getElementById('rPriceLabel').textContent = facturaActual === 'A' ? 'Total al cliente (c/ IVA)' : 'Total al cliente (sin IVA)';
+  document.getElementById('rTipo').textContent       = t.tipo;
+  document.getElementById('rTramo').textContent      = t.label;
+  document.getElementById('rZona').textContent       = ZONA_NOMBRES[zonaActual];
+  document.getElementById('bBruta').textContent      = fmt(t.precio);
+  document.getElementById('bIva').textContent        = iva > 0 ? '+ '+fmt(iva) : '—';
+  document.getElementById('bTotal').textContent      = fmt(total);
+  document.getElementById('bTotalDesc').textContent  = facturaActual === 'A' ? 'Tarifa + IVA 21%' : 'Sin IVA (Factura C)';
+  document.getElementById('bMovida').textContent     = '− '+fmt(movida);
+  document.getElementById('bMovidaDesc').textContent = MOVIDA[zonaActual].label;
+  document.getElementById('bNeta').textContent       = fmt(neta);
+  document.getElementById('bPrestador').textContent  = fmt(prest);
+  document.getElementById('bAvex').textContent       = fmt(avex);
+  document.getElementById('browIva').style.display   = iva > 0 ? '' : 'none';
+  renderTabla(idx);
+}
+
+// ── MAPA ──────────────────────────────────────────────────────
+const map = L.map('map').setView([-34.52,-58.47],11);
+L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png',
+  {attribution:'© OpenStreetMap © CARTO',maxZoom:19}).addTo(map);
+let routeLayer=null, mA=null, mB=null;
+const mkPin = (l,name) => L.divIcon({className:'',
+  html:`<div style="display:flex;align-items:center;gap:6px;background:#22C55E;color:#000;font-family:Inter,sans-serif;font-size:11px;font-weight:700;padding:5px 10px;border-radius:4px;white-space:nowrap;box-shadow:0 2px 8px rgba(0,0,0,.5);">${l} <span style="font-weight:400;max-width:130px;overflow:hidden;text-overflow:ellipsis;">${name}</span></div>`,
+  iconAnchor:[0,0]});
+
+// ── AUTOCOMPLETE ──────────────────────────────────────────────
+let timers={};
+async function suggest(input,listId){
+  const q=input.value.trim(),list=document.getElementById(listId);
+  if(q.length<3){list.innerHTML='';return;}
+  clearTimeout(timers[listId]);
+  timers[listId]=setTimeout(async()=>{
+    try{
+      const d=await(await fetch(`https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(q+' Argentina')}&format=json&limit=6&addressdetails=1&accept-language=es`,{headers:{'User-Agent':'AVEX-App/1.0'}})).json();
+      list.innerHTML='';
+      if(!d.length){list.innerHTML='<div class="sug-item" style="color:var(--muted)">Sin resultados</div>';return;}
+      d.forEach(item=>{
+        const div=document.createElement('div');
+        div.className='sug-item';
+        div.textContent=item.display_name.split(',').slice(0,4).join(', ');
+        div.onclick=()=>{input.value=div.textContent;input.dataset.lat=item.lat;input.dataset.lon=item.lon;list.innerHTML='';};
+        list.appendChild(div);
+      });
+    }catch(e){
+      // Fallback: permitir ingreso manual sin sugerencias
+      list.innerHTML='';
+    }
+  },400);
+}
+document.addEventListener('click',e=>{if(!e.target.closest('.field'))document.querySelectorAll('.suggestions').forEach(s=>s.innerHTML='');});
+
+async function geocode(q){
+  // Intentar varios endpoints hasta que uno funcione
+  const endpoints=[
+    `https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(q+' Argentina')}&format=json&limit=1`,
+    `https://corsproxy.io/?${encodeURIComponent('https://nominatim.openstreetmap.org/search?q='+encodeURIComponent(q+' Argentina')+'&format=json&limit=1')}`,
+  ];
+  for(const url of endpoints){
+    try{
+      const d=await(await fetch(url,{signal:AbortSignal.timeout(5000)})).json();
+      const arr=Array.isArray(d)?d:d;
+      if(arr.length)return{lat:parseFloat(arr[0].lat),lon:parseFloat(arr[0].lon)};
+    }catch(e){continue;}
+  }
+  return null;
+}
+
+// ── CALCULAR ──────────────────────────────────────────────────
+async function calcularRuta(){
+  const oIn=document.getElementById('origenInput');
+  const dIn=document.getElementById('destinoInput');
+  const btn=document.getElementById('btnCalc');
+  const status=document.getElementById('status');
+  if(!oIn.value.trim()||!dIn.value.trim()){alert('Completá origen y destino.');return;}
+  btn.disabled=true;btn.textContent='Calculando...';
+  status.textContent='🔍 Buscando ubicaciones...';status.classList.add('visible');
+  try{
+    let oLat=parseFloat(oIn.dataset.lat),oLon=parseFloat(oIn.dataset.lon);
+    let dLat=parseFloat(dIn.dataset.lat),dLon=parseFloat(dIn.dataset.lon);
+    if(!oLat||isNaN(oLat)){
+      status.textContent='🔍 Geocodificando origen...';
+      const g=await geocode(oIn.value);
+      if(!g)throw new Error('No se encontró el origen. Intentá con una dirección más completa, ej: "Viamonte 300, CABA".');
+      oLat=g.lat;oLon=g.lon;
+    }
+    if(!dLat||isNaN(dLat)){
+      status.textContent='🔍 Geocodificando destino...';
+      const g=await geocode(dIn.value);
+      if(!g)throw new Error('No se encontró el destino. Intentá con una dirección más completa.');
+      dLat=g.lat;dLon=g.lon;
+    }
+    status.textContent='🗺 Calculando ruta...';
+    let km, secs, coords;
+    try{
+      const osrmUrl=`https://router.project-osrm.org/route/v1/driving/${oLon},${oLat};${dLon},${dLat}?overview=full&geometries=geojson`;
+      let rd;
+      try{
+        rd=await(await fetch(osrmUrl,{signal:AbortSignal.timeout(6000)})).json();
+      }catch(e){
+        rd=await(await fetch(`https://corsproxy.io/?${encodeURIComponent(osrmUrl)}`,{signal:AbortSignal.timeout(8000)})).json();
+      }
+      if(!rd.routes?.length)throw new Error('sin ruta');
+      const route=rd.routes[0];
+      km=route.distance/1000;
+      secs=route.duration;
+      coords=route.geometry.coordinates.map(c=>[c[1],c[0]]);
+    }catch(e){
+      // Fallback: distancia haversine en línea recta × 1.3 (factor urbano)
+      const R=6371;
+      const dLat2=(dLat-oLat)*Math.PI/180;
+      const dLon2=(dLon-oLon)*Math.PI/180;
+      const a=Math.sin(dLat2/2)**2+Math.cos(oLat*Math.PI/180)*Math.cos(dLat*Math.PI/180)*Math.sin(dLon2/2)**2;
+      const distLineal=R*2*Math.atan2(Math.sqrt(a),Math.sqrt(1-a));
+      km=distLineal*1.3;
+      secs=km/0.5*60; // ~30 km/h promedio urbano
+      coords=[[oLat,oLon],[dLat,dLon]];
+      status.textContent='⚠ Ruta aproximada (distancia en línea recta × 1.3)';
+    }
+    if(routeLayer)map.removeLayer(routeLayer);
+    if(mA)map.removeLayer(mA);
+    if(mB)map.removeLayer(mB);
+    routeLayer=L.polyline(coords,{color:'#22C55E',weight:4,opacity:.85}).addTo(map);
+    mA=L.marker([oLat,oLon],{icon:mkPin('A',oIn.value.split(',')[0])}).addTo(map);
+    mB=L.marker([dLat,dLon],{icon:mkPin('B',dIn.value.split(',')[0])}).addTo(map);
+    map.fitBounds(routeLayer.getBounds(),{padding:[48,48]});
+    document.getElementById('rKm').textContent    = km.toFixed(1)+' km';
+    document.getElementById('rTiempo').textContent= fmtMin(secs);
+    window._presData={origen:oIn.value,destino:dIn.value,oLat,oLon,dLat,dLon,km:km.toFixed(1),secs,coords};
+    updateRevenue(km);
+    document.getElementById('resultWrap').classList.add('visible');
+    document.getElementById('btnPresupuestoWrap').style.display='block';
+    document.getElementById('resultWrap').scrollIntoView({behavior:'smooth',block:'nearest'});
+    status.classList.remove('visible');
+  }catch(err){
+    status.textContent='⚠ '+err.message;
+  }finally{
+    btn.disabled=false;btn.textContent='Calcular tarifa y revenue →';
+  }
+}
+document.getElementById('destinoInput').addEventListener('keydown',e=>{if(e.key==='Enter')calcularRuta();});
+
+// ── CONFIRMAR VIAJE ───────────────────────────────────────────
+let viajeActivoId=null, monitorInterval=null;
+
+async function confirmarViaje(){
+  const d=window._presData;
+  if(!d){alert('Primero calculá una ruta.');return;}
+  const t=getTarifa(parseFloat(d.km));
+  const movida=MOVIDA[zonaActual].monto;
+  const iva=facturaActual==='A'?t.precio*0.21:0;
+  const total=t.precio+iva;
+  const neta=Math.max(0,t.precio-movida);
+  const viajeId='V'+Date.now().toString(36).toUpperCase();
+  const viajeData={
+    id:viajeId, estado:'pendiente', timestamps:{pendiente:Date.now()},
+    createdAt:Date.now(),
+    origen:document.getElementById('origenInput').value,
+    destino:document.getElementById('destinoInput').value,
+    oLat:d.oLat,oLon:d.oLon,dLat:d.dLat,dLon:d.dLon,
+    routeCoords:d.coords,
+    km:d.km,tiempo:fmtMin(d.secs),
+    cliente:       document.getElementById('clienteInput').value||'—',
+    clienteTel:    document.getElementById('telefonoInput').value||'—',
+    vehiculoCliente:document.getElementById('vehiculoInput').value||'—',
+    patenteCliente: document.getElementById('patenteInput').value||'—',
+    prestadorNombre:document.getElementById('prestadorNombreInput').value||'—',
+    prestadorTel:   document.getElementById('prestadorTelInput').value||'—',
+    prestadorVehiculo:document.getElementById('prestadorVehiculoInput').value||'—',
+    prestadorPatente:document.getElementById('prestadorPatenteInput').value||'—',
+    total,montoPrestador:neta*0.6,montoAvex:neta*0.4,
+    factura:facturaActual,zona:ZONA_NOMBRES[zonaActual],
+  };
+  localStorage.setItem(`viaje:${viajeId}`,JSON.stringify(viajeData));
+  guardarEnHistorial(viajeData);
+  viajeActivoId=viajeId;
+  const panel=document.getElementById('monitorPanel');
+  panel.style.display='block';
+  document.getElementById('monitorId').textContent=`ID: ${viajeId}`;
+  const dataB64=btoa(unescape(encodeURIComponent(JSON.stringify(viajeData))));
+  const baseUrl=window.location.href.split('?')[0];
+  window._linkPrestador=`${baseUrl}?data=${dataB64}`;
+  window._viajeId=viajeId;
+  document.getElementById('linkUrl').textContent=`${baseUrl}?data=... (listo para copiar)`;
+  panel.scrollIntoView({behavior:'smooth',block:'nearest'});
+  iniciarMonitoreo(viajeId);
+  actualizarContadorHistorial();
+}
+
+function iniciarMonitoreo(viajeId){
+  if(monitorInterval)clearInterval(monitorInterval);
+  actualizarMonitor(viajeId);
+  monitorInterval=setInterval(()=>actualizarMonitor(viajeId),3000);
+}
+
+function actualizarMonitor(viajeId){
+  const raw=localStorage.getItem(`viaje:${viajeId}`);
+  if(!raw)return;
+  const v=JSON.parse(raw);
+  const ORDEN=['pendiente','en-camino','en-origen','en-destino','completado'];
+  const idx=ORDEN.indexOf(v.estado==='cobro'?'en-destino':v.estado);
+  ORDEN.forEach((e,i)=>{
+    const ms=document.getElementById(`ms-${e}`);
+    if(!ms)return;
+    ms.className='ms'+(i<idx?' done':i===idx?' active':'');
+    const line=document.getElementById(`msl-${i}`);
+    if(line)line.classList.toggle('done',i<idx);
+    const tEl=document.getElementById(`mst-${e}`);
+    if(tEl&&v.timestamps?.[e])tEl.textContent=new Date(v.timestamps[e]).toLocaleTimeString('es-AR',{hour:'2-digit',minute:'2-digit'});
+  });
+  const LABELS={'pendiente':'Esperando al prestador','en-camino':'En camino al origen','en-origen':'Llegó al origen','en-destino':'Llegó al destino','cobro':'Confirmando cobro','completado':'Viaje completado'};
+  document.getElementById('monitorEstadoTxt').textContent=LABELS[v.estado]||v.estado;
+  if(v.estado==='completado'){
+    document.getElementById('estadoDot').classList.add('done');
+    clearInterval(monitorInterval);
+    mostrarComprobanteMonitor(v);
+    guardarEnHistorial(v); // actualizar historial con estado final
+    actualizarContadorHistorial();
+  }
+}
+
+function mostrarComprobanteMonitor(v){
+  const dur=v.timestamps?.completado&&v.timestamps?.['en-camino']
+    ?Math.round((v.timestamps.completado-v.timestamps['en-camino'])/60000)+' min':'—';
+  document.getElementById('comprobanteRows').innerHTML=`
+    <div class="comprobante-row"><span class="cl">ID</span><span class="cv">${v.id}</span></div>
+    <div class="comprobante-row"><span class="cl">Prestador</span><span class="cv">${v.prestadorNombre}</span></div>
+    <div class="comprobante-row"><span class="cl">Cliente</span><span class="cv">${v.cliente}</span></div>
+    <div class="comprobante-row"><span class="cl">Recorrido</span><span class="cv">${v.origen} → ${v.destino}</span></div>
+    <div class="comprobante-row"><span class="cl">Distancia</span><span class="cv">${v.km} km</span></div>
+    <div class="comprobante-row"><span class="cl">Duración</span><span class="cv">${dur}</span></div>
+    <div class="comprobante-row"><span class="cl">Total cobrado</span><span class="cv">${fmt(v.total)}</span></div>
+    <div class="comprobante-row"><span class="cl">Parte prestador</span><span class="cv" style="color:var(--accent)">${fmt(v.montoPrestador)}</span></div>
+    <div class="comprobante-row"><span class="cl">Parte AVEX</span><span class="cv" style="color:var(--blue)">${fmt(v.montoAvex)}</span></div>
+    <div class="comprobante-row"><span class="cl">Cobro</span><span class="cv">${v.formaCobro==='efectivo'?'💵 Efectivo':'🏦 Transferencia'}</span></div>
+  `;
+  document.getElementById('monitorComprobante').style.display='block';
+}
+
+function copiarLink(){
+  const link=window._linkPrestador;
+  if(!link)return;
+  navigator.clipboard.writeText(link).then(()=>{
+    const btn=document.querySelector('.btn-copy');
+    btn.innerHTML='✓';btn.style.color='var(--accent)';
+    setTimeout(()=>{btn.innerHTML='<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>';btn.style.color='';},2000);
+  }).catch(()=>{const ta=document.createElement('textarea');ta.value=link;document.body.appendChild(ta);ta.select();document.execCommand('copy');document.body.removeChild(ta);alert('Link copiado');});
+}
+
+function compartirWA(){
+  if(!window._linkPrestador)return;
+  const nombre=document.getElementById('prestadorNombreInput').value.split(' ')[0];
+  const origen=document.getElementById('origenInput').value;
+  const destino=document.getElementById('destinoInput').value;
+  const cliente=document.getElementById('clienteInput').value;
+  const msg=`Hola${nombre?' '+nombre:''}! Te comparto el link del viaje AVEX:\n${window._linkPrestador}\n\nOrigen: ${origen}\nDestino: ${destino}\nCliente: ${cliente}`;
+  window.open(`https://wa.me/?text=${encodeURIComponent(msg)}`);
+}
+
+// ── HISTORIAL ─────────────────────────────────────────────────
+function getHistorial(){
+  try{return JSON.parse(localStorage.getItem('avex-historial')||'[]');}catch(e){return[];}
+}
+
+function guardarEnHistorial(viaje){
+  const hist=getHistorial();
+  const idx=hist.findIndex(v=>v.id===viaje.id);
+  if(idx>=0)hist[idx]=viaje; // actualizar existente
+  else hist.unshift(viaje);  // agregar nuevo al inicio
+  // Mantener máximo 100 viajes
+  if(hist.length>100)hist.splice(100);
+  localStorage.setItem('avex-historial',JSON.stringify(hist));
+}
+
+function actualizarContadorHistorial(){
+  const hist=getHistorial();
+  const count=document.getElementById('histCount');
+  if(hist.length>0){count.textContent=hist.length;count.style.display='inline';}
+  else{count.style.display='none';}
+}
+
+function renderHistorial(){
+  const hist=getHistorial();
+  const lista=document.getElementById('histLista');
+  const statsEl=document.getElementById('histStats');
+
+  if(hist.length===0){
+    statsEl.innerHTML='';
+    lista.innerHTML=`<div class="hist-empty"><div class="hist-empty-icon">📋</div><h3 style="color:var(--text);font-size:16px;">Sin viajes aún</h3><p>Los viajes confirmados aparecerán acá automáticamente.</p></div>`;
+    return;
+  }
+
+  // Stats
+  const completados=hist.filter(v=>v.estado==='completado');
+  const totalAvex=completados.reduce((a,v)=>a+(v.montoAvex||0),0);
+  const totalPrest=completados.reduce((a,v)=>a+(v.montoPrestador||0),0);
+  statsEl.innerHTML=`
+    <div class="hist-stat"><div class="hist-stat-label">Total viajes</div><div class="hist-stat-value">${hist.length}</div></div>
+    <div class="hist-stat"><div class="hist-stat-label">Completados</div><div class="hist-stat-value green">${completados.length}</div></div>
+    <div class="hist-stat"><div class="hist-stat-label">Revenue AVEX</div><div class="hist-stat-value blue">${fmt(totalAvex)}</div></div>
+    <div class="hist-stat"><div class="hist-stat-label">Pagado prestadores</div><div class="hist-stat-value">${fmt(totalPrest)}</div></div>
+  `;
+
+  // Lista
+  lista.innerHTML=hist.map(v=>{
+    const fecha=v.createdAt?new Date(v.createdAt).toLocaleDateString('es-AR',{day:'2-digit',month:'2-digit',year:'2-digit',hour:'2-digit',minute:'2-digit'}):'—';
+    const dur=v.timestamps?.completado&&v.timestamps?.['en-camino']
+      ?Math.round((v.timestamps.completado-v.timestamps['en-camino'])/60000)+' min':'—';
+    return `
+    <div class="hist-viaje" id="hv-${v.id}">
+      <div class="hist-viaje-header" onclick="toggleHistViaje('${v.id}')">
+        <div>
+          <div class="hist-viaje-id">${v.id} · ${fecha}</div>
+          <div class="hist-viaje-ruta">${v.origen.split(',')[0]} <span>→</span> ${v.destino.split(',')[0]}</div>
+        </div>
+        <div class="hist-estado-badge ${v.estado}">${v.estado==='completado'?'✓ Completado':v.estado.replace('-',' ')}</div>
+      </div>
+      <div class="hist-viaje-body">
+        <div class="hist-grid">
+          <div class="hist-cell"><div class="hist-cell-label">Cliente</div><div class="hist-cell-value">${v.cliente||'—'}</div></div>
+          <div class="hist-cell"><div class="hist-cell-label">Prestador</div><div class="hist-cell-value">${v.prestadorNombre||'—'}</div></div>
+          <div class="hist-cell"><div class="hist-cell-label">Distancia</div><div class="hist-cell-value">${v.km} km</div></div>
+          <div class="hist-cell"><div class="hist-cell-label">Total cobrado</div><div class="hist-cell-value">${fmt(v.total)}</div></div>
+          <div class="hist-cell"><div class="hist-cell-label">AVEX 40%</div><div class="hist-cell-value blue">${fmt(v.montoAvex)}</div></div>
+          <div class="hist-cell"><div class="hist-cell-label">Prestador 60%</div><div class="hist-cell-value green">${fmt(v.montoPrestador)}</div></div>
+          ${v.estado==='completado'?`
+          <div class="hist-cell"><div class="hist-cell-label">Duración</div><div class="hist-cell-value">${dur}</div></div>
+          <div class="hist-cell"><div class="hist-cell-label">Cobro</div><div class="hist-cell-value">${v.formaCobro==='efectivo'?'💵 Efectivo':'🏦 Transferencia'}</div></div>
+          <div class="hist-cell"><div class="hist-cell-label">Zona</div><div class="hist-cell-value">${v.zona||'—'}</div></div>
+          `:''}
+        </div>
+        <div class="hist-actions">
+          <button class="hist-btn" onclick="reenviarLink('${v.id}')">📤 Reenviar link</button>
+          <button class="hist-btn danger" onclick="eliminarViaje('${v.id}')">🗑 Eliminar</button>
+        </div>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function toggleHistViaje(id){
+  document.getElementById(`hv-${id}`).classList.toggle('expanded');
+}
+
+function reenviarLink(id){
+  const raw=localStorage.getItem(`viaje:${id}`);
+  if(!raw){alert('No se encontraron los datos del viaje.');return;}
+  const v=JSON.parse(raw);
+  const dataB64=btoa(unescape(encodeURIComponent(JSON.stringify(v))));
+  const baseUrl=window.location.href.split('?')[0];
+  const link=`${baseUrl}?data=${dataB64}`;
+  const nombre=v.prestadorNombre?.split(' ')[0]||'';
+  const msg=`Hola${nombre?' '+nombre:''}! Link del viaje AVEX:\n${link}\n\nOrigen: ${v.origen}\nDestino: ${v.destino}\nCliente: ${v.cliente}`;
+  window.open(`https://wa.me/?text=${encodeURIComponent(msg)}`);
+}
+
+function eliminarViaje(id){
+  if(!confirm('¿Eliminar este viaje del historial?'))return;
+  const hist=getHistorial().filter(v=>v.id!==id);
+  localStorage.setItem('avex-historial',JSON.stringify(hist));
+  localStorage.removeItem(`viaje:${id}`);
+  actualizarContadorHistorial();
+  renderHistorial();
+}
+
+function limpiarHistorial(){
+  if(!confirm('¿Limpiar todo el historial? Esta acción no se puede deshacer.'))return;
+  const hist=getHistorial();
+  hist.forEach(v=>localStorage.removeItem(`viaje:${v.id}`));
+  localStorage.removeItem('avex-historial');
+  actualizarContadorHistorial();
+  renderHistorial();
+}
+
+// ── PRESUPUESTO ───────────────────────────────────────────────
+document.getElementById('modalOverlay').addEventListener('click',e=>{
+  if(e.target===document.getElementById('modalOverlay'))cerrarPresupuesto();
+});
+
+function abrirPresupuesto(){
+  const d=window._presData;
+  if(!d){alert('Primero calculá una ruta para generar el presupuesto.');return;}
+  const t=getTarifa(parseFloat(d.km));
+  const movida=MOVIDA[zonaActual].monto;
+  const iva=facturaActual==='A'?t.precio*0.21:0;
+  const total=t.precio+iva;
+  const cliente=document.getElementById('clienteInput').value.trim()||'—';
+  const tel=document.getElementById('telefonoInput').value.trim()||'—';
+  const vehiculo=document.getElementById('vehiculoInput').value.trim()||'—';
+  const patente=document.getElementById('patenteInput').value.trim().toUpperCase()||'—';
+  const prestNombre=document.getElementById('prestadorNombreInput').value.trim()||'—';
+  const prestTel=document.getElementById('prestadorTelInput').value.trim()||'—';
+  const prestVehiculo=document.getElementById('prestadorVehiculoInput').value.trim()||'—';
+  const prestPatente=document.getElementById('prestadorPatenteInput').value.trim().toUpperCase()||'—';
+  const fecha=new Date().toLocaleDateString('es-AR',{day:'2-digit',month:'2-digit',year:'numeric'});
+  const hora=new Date().toLocaleTimeString('es-AR',{hour:'2-digit',minute:'2-digit'});
+  const nro='P-'+Date.now().toString().slice(-6);
+  const centerLat=((parseFloat(d.oLat)+parseFloat(d.dLat))/2).toFixed(5);
+  const centerLon=((parseFloat(d.oLon)+parseFloat(d.dLon))/2).toFixed(5);
+  const staticMap=`https://staticmap.openstreetmap.de/staticmap.php?center=${centerLat},${centerLon}&zoom=12&size=580x220&maptype=mapnik&markers=${d.oLat},${d.oLon},red-pushpin|${d.dLat},${d.dLon},green-pushpin`;
+  document.getElementById('printArea').innerHTML=`
+    <div class="pres-header">
+      <div><img class="pres-logo" src="https://avexargentina.com/logo_avex.png" alt="AVEX" onerror="this.style.display='none'"></div>
+      <div class="pres-meta"><div><strong>Presupuesto N°</strong> ${nro}</div><div><strong>Fecha</strong> ${fecha} · ${hora}</div><div>avexargentina.com</div></div>
+    </div>
+    <div class="pres-title">Presupuesto de traslado vehicular</div>
+    <div class="pres-subtitle">Asistencia vehicular express · AVEX Argentina</div>
+    <div class="pres-section"><div class="pres-sec-label">Cliente</div><div class="pres-grid">
+      <div class="pres-field"><div class="pres-field-label">Nombre / Empresa</div><div class="pres-field-value">${cliente}</div></div>
+      <div class="pres-field"><div class="pres-field-label">Contacto</div><div class="pres-field-value">${tel}</div></div>
+    </div></div>
+    <div class="pres-section"><div class="pres-sec-label">Vehículo del cliente</div><div class="pres-grid">
+      <div class="pres-field"><div class="pres-field-label">Marca y Modelo</div><div class="pres-field-value">${vehiculo}</div></div>
+      <div class="pres-field"><div class="pres-field-label">Patente</div><div class="pres-field-value">${patente}</div></div>
+    </div></div>
+    <div class="pres-section"><div class="pres-sec-label">Prestador asignado</div><div class="pres-grid">
+      <div class="pres-field"><div class="pres-field-label">Nombre</div><div class="pres-field-value">${prestNombre}</div></div>
+      <div class="pres-field"><div class="pres-field-label">Teléfono</div><div class="pres-field-value">${prestTel}</div></div>
+    </div><div class="pres-grid" style="margin-top:12px;">
+      <div class="pres-field"><div class="pres-field-label">Vehículo de asistencia</div><div class="pres-field-value">${prestVehiculo}</div></div>
+      <div class="pres-field"><div class="pres-field-label">Patente</div><div class="pres-field-value">${prestPatente}</div></div>
+    </div></div>
+    <div class="pres-section"><div class="pres-sec-label">Recorrido</div>
+      <div class="pres-grid" style="margin-bottom:12px;">
+        <div class="pres-field"><div class="pres-field-label">Origen</div><div class="pres-field-value">${d.origen}</div></div>
+        <div class="pres-field"><div class="pres-field-label">Destino</div><div class="pres-field-value">${d.destino}</div></div>
+      </div>
+      <div class="pres-grid" style="margin-bottom:12px;">
+        <div class="pres-field"><div class="pres-field-label">Distancia</div><div class="pres-field-value">${d.km} km</div></div>
+        <div class="pres-field"><div class="pres-field-label">Tiempo estimado</div><div class="pres-field-value">${fmtMin(d.secs)}</div></div>
+      </div>
+      <div class="pres-map-box"><img src="${staticMap}" alt="Mapa" style="width:100%;height:100%;object-fit:cover;display:block;"></div>
+    </div>
+    <div class="pres-total-box">
+      <div><div class="pres-total-label">Total del servicio</div><div><span class="pres-total-price">${fmt(total)}</span><span class="pres-total-cur">ARS</span></div></div>
+      <div class="pres-total-right"><div class="pres-total-tipo">${t.tipo}</div><div class="pres-total-fact">Factura ${facturaActual}${iva>0?' · IVA 21% incluido':' · Sin IVA'}</div></div>
+    </div>
+    <div class="pres-section"><div class="pres-sec-label">Detalle</div>
+      ${iva>0?`<div class="pres-detail-row"><span class="label">Tarifa base (sin IVA)</span><span class="value">${fmt(t.precio)}</span></div><div class="pres-detail-row"><span class="label">IVA 21%</span><span class="value">${fmt(iva)}</span></div>`:''}
+      <div class="pres-detail-row"><span class="label">Zona de operación</span><span class="value">${ZONA_NOMBRES[zonaActual]}</span></div>
+      <div class="pres-detail-row"><span class="label">Tramo tarifario</span><span class="value">${t.label}</span></div>
+      <div class="pres-detail-row" style="font-weight:700;"><span class="label">Total a cobrar</span><span class="value" style="color:#22C55E;font-size:15px;">${fmt(total)}</span></div>
+    </div>
+    <div class="pres-footer">Este presupuesto es válido por 24 horas desde su emisión.<br><strong>AVEX</strong> · Asistencia vehicular express · WhatsApp: +54 9 11 6829-4554 · avexargentina.com</div>
+  `;
+  document.getElementById('modalOverlay').classList.add('open');
+  document.body.style.overflow='hidden';
+}
+
+function cerrarPresupuesto(){
+  document.getElementById('modalOverlay').classList.remove('open');
+  document.body.style.overflow='';
+}
+document.addEventListener('keydown',e=>{if(e.key==='Escape')cerrarPresupuesto();});
+
+// ── MODO PRESTADOR ────────────────────────────────────────────
+let pViaje=null, pCobroSel=null, pMapObj=null;
+const P_SIG={pendiente:'en-camino','en-camino':'en-origen','en-origen':'en-destino'};
+const P_ORDEN=['pendiente','en-camino','en-origen','en-destino','cobro','completado'];
+const P_BADGE_LABELS={pendiente:'Pendiente','en-camino':'En camino','en-origen':'En origen','en-destino':'En destino',cobro:'Confirmando cobro',completado:'Completado'};
+
+function pRender(){
+  const v=pViaje;
+  if(!v)return;
+  const badge=document.getElementById('pBadge');
+  badge.className=`p-badge ${v.estado}`;
+  badge.textContent=P_BADGE_LABELS[v.estado]||v.estado;
+  const steps=[
+    {key:'en-camino',icon:'🚗',label:'En camino al origen'},
+    {key:'en-origen',icon:'📍',label:'Llegada al origen'},
+    {key:'en-destino',icon:'🏁',label:'Llegada al destino'},
+    {key:'completado',icon:'✅',label:'Cobro confirmado'},
+  ];
+  const eIdx=P_ORDEN.indexOf(v.estado==='cobro'?'en-destino':v.estado);
+  const tlHtml=steps.map(s=>{
+    const sIdx=P_ORDEN.indexOf(s.key);
+    const done=eIdx>sIdx||(v.estado==='completado'&&s.key==='completado');
+    const active=!done&&eIdx===sIdx;
+    const hora=v.timestamps?.[s.key]?new Date(v.timestamps[s.key]).toLocaleTimeString('es-AR',{hour:'2-digit',minute:'2-digit'}):'';
+    return `<div class="p-tl-step ${done?'done':''} ${active?'active':''}">
+      <div class="p-tl-dot">${done?'✓':s.icon}</div>
+      <div class="p-tl-body"><div class="p-tl-label">${s.label}</div>${hora?`<div class="p-tl-time">${hora}</div>`:''}</div>
+    </div>`;
+  }).join('');
+  let cobroHtml='';
+  if(v.estado==='en-destino'||v.estado==='cobro'){
+    cobroHtml=`<div class="p-cobro-card">
+      <div class="p-cobro-title">¿Cómo se cobró el servicio?</div>
+      <div class="p-cobro-sub">Tu parte: ${fmt(v.montoPrestador)} ARS</div>
+      <div class="p-cobro-opts">
+        <div class="p-cobro-opt ${pCobroSel==='efectivo'?'selected':''}" onclick="pSelCobro('efectivo')">
+          <div class="p-cobro-opt-icon">💵</div><div class="p-cobro-opt-label">Cobré en efectivo</div><div class="p-cobro-opt-desc">El cliente me pagó directo</div>
+        </div>
+        <div class="p-cobro-opt ${pCobroSel==='transferencia'?'selected':''}" onclick="pSelCobro('transferencia')">
+          <div class="p-cobro-opt-icon">🏦</div><div class="p-cobro-opt-label">Transferí a AVEX</div><div class="p-cobro-opt-desc">Mandé mi parte a AVEX</div>
+        </div>
+      </div>
+      <button class="p-btn-confirmar" onclick="pConfirmarCobro()" style="${pCobroSel?'display:block':'display:none'}">Confirmar y cerrar viaje ✓</button>
+    </div>`;
+  }
+  let doneHtml='';
+  if(v.estado==='completado'){
+    const dur=v.timestamps?.completado&&v.timestamps?.['en-camino']?Math.round((v.timestamps.completado-v.timestamps['en-camino'])/60000)+' min':'—';
+    doneHtml=`<div class="p-done-card">
+      <div class="p-done-icon">✅</div>
+      <div class="p-done-title">Viaje completado</div>
+      <div class="p-done-sub">Gracias ${v.prestadorNombre||''}. Resumen del viaje:</div>
+      <div class="p-res-row"><span class="p-res-l">Recorrido</span><span class="p-res-v">${v.origen} → ${v.destino}</span></div>
+      <div class="p-res-row"><span class="p-res-l">Distancia</span><span class="p-res-v">${v.km} km</span></div>
+      <div class="p-res-row"><span class="p-res-l">Duración</span><span class="p-res-v">${dur}</span></div>
+      <div class="p-res-row"><span class="p-res-l">Total cobrado</span><span class="p-res-v">${fmt(v.total)}</span></div>
+      <div class="p-res-row"><span class="p-res-l">Tu parte</span><span class="p-res-v" style="color:var(--accent)">${fmt(v.montoPrestador)}</span></div>
+      <div class="p-res-row"><span class="p-res-l">Cobro</span><span class="p-res-v">${v.formaCobro==='efectivo'?'💵 Efectivo':'🏦 Transferencia'}</span></div>
+    </div>`;
+  }
+  document.getElementById('pContent').innerHTML=`
+    <div class="p-card">
+      <div class="p-card-title">Datos del viaje</div>
+      <div class="p-row"><span class="p-row-icon">🟢</span><div><div class="p-row-label">Origen</div><div class="p-row-value">${v.origen}</div></div></div>
+      <div class="p-row"><span class="p-row-icon">🔴</span><div><div class="p-row-label">Destino</div><div class="p-row-value">${v.destino}</div></div></div>
+      <div class="p-row"><span class="p-row-icon">📏</span><div><div class="p-row-label">Recorrido</div><div class="p-row-value">${v.km} km · ${v.tiempo}</div></div></div>
+      <div class="p-row"><span class="p-row-icon">👤</span><div><div class="p-row-label">Cliente</div><div class="p-row-value">${v.cliente||'—'}</div><div class="p-row-sub">${v.clienteTel||''}</div></div></div>
+      <div class="p-row"><span class="p-row-icon">🚘</span><div><div class="p-row-label">Vehículo a asistir</div><div class="p-row-value">${v.vehiculoCliente||'—'} · ${v.patenteCliente||'—'}</div></div></div>
+    </div>
+    <div class="p-card" style="overflow:hidden;"><div id="p-map"></div></div>
+    <div class="p-total">
+      <div><div class="p-total-label">Total del servicio</div><div><span class="p-total-price">${fmt(v.total)}</span><span class="p-total-cur">ARS</span></div></div>
+      <div class="p-total-right"><div>Tu parte</div><div class="p-total-parte">${fmt(v.montoPrestador)}</div><div>Factura ${v.factura}</div></div>
+    </div>
+    <div class="p-card"><div class="p-card-title">Estado del viaje</div><div class="p-tl">${tlHtml}</div></div>
+    ${cobroHtml}${doneHtml}
+  `;
+  if(pMapObj){pMapObj.remove();pMapObj=null;}
+  pMapObj=L.map('p-map').setView([v.oLat,v.oLon],12);
+  L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png',{attribution:'© OpenStreetMap © CARTO',maxZoom:19}).addTo(pMapObj);
+  const mkP=(lbl,col)=>L.divIcon({className:'',html:`<div style="background:${col};color:#000;font-family:Inter,sans-serif;font-size:11px;font-weight:700;padding:4px 10px;border-radius:4px;white-space:nowrap;">${lbl}</div>`,iconAnchor:[0,0]});
+  L.marker([v.oLat,v.oLon],{icon:mkP('A · Origen','#22C55E')}).addTo(pMapObj);
+  L.marker([v.dLat,v.dLon],{icon:mkP('B · Destino','#F59E0B')}).addTo(pMapObj);
+  if(v.routeCoords?.length){const poly=L.polyline(v.routeCoords,{color:'#22C55E',weight:3,opacity:.8}).addTo(pMapObj);pMapObj.fitBounds(poly.getBounds(),{padding:[30,30]});}
+  const nav=document.getElementById('pNav');
+  const btn=document.getElementById('pBtnAccion');
+  if(P_SIG[v.estado]){
+    nav.style.display='block';
+    const cfg={pendiente:{cls:'iniciar',icon:'🚗',txt:'Iniciar viaje al origen'},'en-camino':{cls:'origen',icon:'📍',txt:'Llegué al origen'},'en-origen':{cls:'destino',icon:'🏁',txt:'Llegué al destino'}};
+    const c=cfg[v.estado];
+    btn.className=`p-btn-accion ${c.cls}`;
+    document.getElementById('pBtnIcon').textContent=c.icon;
+    document.getElementById('pBtnTxt').textContent=c.txt;
+  }else{nav.style.display='none';}
+}
+
+function pAccion(){
+  const sig=P_SIG[pViaje.estado];if(!sig)return;
+  pViaje.estado=sig;
+  pViaje.timestamps=pViaje.timestamps||{};
+  pViaje.timestamps[sig]=Date.now();
+  pGuardar();pRender();
+}
+function pSelCobro(tipo){pCobroSel=tipo;pViaje.estado='cobro';pRender();}
+function pConfirmarCobro(){
+  if(!pCobroSel)return;
+  pViaje.estado='completado';pViaje.formaCobro=pCobroSel;
+  pViaje.timestamps=pViaje.timestamps||{};
+  pViaje.timestamps.completado=Date.now();
+  pGuardar();pRender();
+}
+function pGuardar(){
+  try{localStorage.setItem(`viaje:${pViaje.id}`,JSON.stringify(pViaje));}catch(e){}
+}
+
+function initModoPrestador(){
+  const params=new URLSearchParams(window.location.search);
+  const dataB64=params.get('data');
+  if(!dataB64)return false;
+  try{
+    pViaje=JSON.parse(decodeURIComponent(escape(atob(dataB64))));
+    try{
+      const local=localStorage.getItem(`viaje:${pViaje.id}`);
+      if(local){const lv=JSON.parse(local);if(P_ORDEN.indexOf(lv.estado)>P_ORDEN.indexOf(pViaje.estado))pViaje=lv;}
+    }catch(e){}
+    document.getElementById('modoPrestador').classList.add('active');
+    document.getElementById('modoAvex').style.display='none';
+    document.title='AVEX · Viaje del Prestador';
+    pRender();
+    setInterval(()=>{
+      try{const local=localStorage.getItem(`viaje:${pViaje.id}`);
+        if(local){const lv=JSON.parse(local);if(lv.estado!==pViaje.estado){pViaje=lv;pRender();}}
+      }catch(e){}
+    },3000);
+    return true;
+  }catch(e){
+    document.getElementById('pContent').innerHTML=`<p style="color:var(--muted);text-align:center;padding:40px 20px;">⚠️ Link inválido.</p>`;
+    document.getElementById('modoPrestador').classList.add('active');
+    document.getElementById('modoAvex').style.display='none';
+    return true;
+  }
+}
+
+// ── INIT ──────────────────────────────────────────────────────
+if(!initModoPrestador()){
+  if(localStorage.getItem('avex-theme')==='light')toggleTheme();
+  actualizarContadorHistorial();
+  // Polling de viaje activo al volver de historial
+  setInterval(()=>{
+    if(viajeActivoId)actualizarMonitor(viajeActivoId);
+  },3000);
+}
+</script>
+</body>
+</html>
