@@ -547,6 +547,7 @@ input::placeholder{color:#404040;}
   <div class="nav-tab" onclick="showPage('pageLiquidaciones',this)">Liquidaciones</div>
   <div class="nav-tab" onclick="showPage('pageTarifario',this)">Tarifario</div>
   <div class="nav-spacer"></div>
+  <span id="userTag" style="font-size:11px;font-weight:600;color:var(--muted);padding:4px 10px;background:var(--surface2);border:1px solid var(--border);border-radius:20px;white-space:nowrap;"></span>
   <button class="theme-toggle" onclick="toggleTheme()">
     <span id="themeIcon">☀️</span><span id="themeLabel">Día</span>
   </button>
@@ -2460,14 +2461,25 @@ function borrarTodasLiquidaciones() {
   renderLiquidacionesPasadas();
 }
 
-// ── LOGIN ──────────────────────────────────────────────────────
-const CLAVE = 'motoraton3466';
+
+// ── ROLES ─────────────────────────────────────────────────────
+const ROLES = {
+  'motoraton3466': { nombre: 'Admin',  paginas: ['pageCalc','pageHistorial','pageLiquidaciones','pageTarifario'] },
+  'nico3466':      { nombre: 'Nico',   paginas: ['pageCalc','pageHistorial'] },
+  'jose3466':      { nombre: 'José',   paginas: ['pageCalc','pageHistorial'] },
+  'agus3466':      { nombre: 'Agus',   paginas: ['pageCalc','pageHistorial'] },
+};
+
+let rolActual = null;
 
 function checkLogin() {
   const val = document.getElementById('loginInput').value.trim();
-  if (val === CLAVE) {
-    localStorage.setItem('avex-auth', btoa(CLAVE));
+  const rol = ROLES[val];
+  if (rol) {
+    rolActual = val;
+    localStorage.setItem('avex-auth', btoa(val));
     document.getElementById('loginScreen').classList.add('hidden');
+    aplicarRol(rol);
   } else {
     document.getElementById('loginError').classList.add('visible');
     document.getElementById('loginInput').value = '';
@@ -2475,9 +2487,33 @@ function checkLogin() {
   }
 }
 
+function aplicarRol(rol) {
+  // Mostrar/ocultar tabs según permisos
+  const tabs = {
+    pageCalc:          document.querySelector('.nav-tab[onclick*="pageCalc"]'),
+    pageHistorial:     document.querySelector('.nav-tab[onclick*="pageHistorial"]'),
+    pageLiquidaciones: document.querySelector('.nav-tab[onclick*="pageLiquidaciones"]'),
+    pageTarifario:     document.querySelector('.nav-tab[onclick*="pageTarifario"]'),
+  };
+  Object.entries(tabs).forEach(([page, el]) => {
+    if (!el) return;
+    el.style.display = rol.paginas.includes(page) ? '' : 'none';
+  });
+  // Mostrar nombre del usuario
+  const tag = document.getElementById('userTag');
+  if (tag) tag.textContent = rol.nombre;
+  // Si la página activa no está permitida, redirigir a la primera permitida
+  const activa = document.querySelector('.page.active');
+  if (activa && !rol.paginas.includes(activa.id)) {
+    const primera = document.querySelector(`.nav-tab[onclick*="${rol.paginas[0]}"]`);
+    if (primera) showPage(rol.paginas[0], primera);
+  }
+}
+
 function logout() {
   if (!confirm('¿Cerrar sesión?')) return;
   localStorage.removeItem('avex-auth');
+  rolActual = null;
   document.getElementById('loginInput').value = '';
   document.getElementById('loginError').classList.remove('visible');
   document.getElementById('loginScreen').classList.remove('hidden');
@@ -2488,11 +2524,15 @@ const esPrestador = initModoPrestador();
 if (!esPrestador) {
   try {
     const saved = localStorage.getItem('avex-auth');
-    const ok = saved && atob(saved) === CLAVE;
-    if (!ok) {
-      document.getElementById('loginScreen').classList.remove('hidden');
-    } else {
+    const clave = saved ? atob(saved) : null;
+    const rol   = clave ? ROLES[clave] : null;
+    if (rol) {
+      rolActual = clave;
       document.getElementById('loginScreen').classList.add('hidden');
+      aplicarRol(rol);
+    } else {
+      localStorage.removeItem('avex-auth');
+      document.getElementById('loginScreen').classList.remove('hidden');
     }
   } catch(e) {
     document.getElementById('loginScreen').classList.remove('hidden');
