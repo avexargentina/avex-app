@@ -154,6 +154,8 @@ input::placeholder{color:#404040;}
 .tabla-row span{font-size:12px;color:var(--text);}
 .tabla-row .price{font-weight:600;}
 .tabla-row.active .price{color:var(--accent);}
+#tarifaPreview .tabla-head{grid-template-columns:2fr 1fr 1fr 1fr 1fr;}
+#tarifaPreview .tabla-row{grid-template-columns:2fr 1fr 1fr 1fr 1fr;}
 .chip{display:inline-block;font-size:9px;font-weight:600;letter-spacing:1px;text-transform:uppercase;padding:3px 8px;border-radius:20px;background:var(--surface2);color:var(--muted);border:1px solid var(--border);}
 .chip.base{background:#0d1f16;color:var(--accent);border-color:var(--accent-dim);}
 .chip.active-chip{background:var(--accent-dim);color:var(--accent);border-color:var(--accent);}
@@ -434,10 +436,14 @@ input::placeholder{color:#404040;}
 @media print{
   body *{visibility:hidden;}
   #modalOverlay,#modalOverlay *{visibility:visible;}
-  #modalOverlay{position:absolute;top:0;left:0;padding:0;background:var(--black);}
-  #modalBox{box-shadow:none;border-radius:0;width:100%;max-width:100%;}
+  #modalLiqOverlay,#modalLiqOverlay *{visibility:visible;}
+  #modalCompOverlay,#modalCompOverlay *{visibility:visible;}
+  #modalOverlay{position:absolute;top:0;left:0;padding:0;background:#fff;}
+  #modalLiqOverlay{position:absolute;top:0;left:0;padding:0;background:#fff;}
+  #modalCompOverlay{position:absolute;top:0;left:0;padding:0;background:#fff;}
+  #modalBox,#modalLiqOverlay>div,#modalCompOverlay>div{box-shadow:none;border-radius:0;width:100%;max-width:100%;}
   .no-print{display:none!important;}
-  #printArea{padding:24px 32px;}
+  #printArea,#liqPrintArea,#compPrintArea{padding:24px 32px;}
   .pres-map-box{height:200px;}
 }
 /* ── LIQUIDACIONES ── */
@@ -539,6 +545,7 @@ input::placeholder{color:#404040;}
   <div class="nav-tab active" onclick="showPage('pageCalc',this)">Calculadora</div>
   <div class="nav-tab" onclick="showPage('pageHistorial',this)" id="tabHistorial">Historial <span id="histCount" style="background:var(--accent);color:#000;font-size:9px;font-weight:700;padding:1px 6px;border-radius:10px;margin-left:4px;display:none;">0</span></div>
   <div class="nav-tab" onclick="showPage('pageLiquidaciones',this)">Liquidaciones</div>
+  <div class="nav-tab" onclick="showPage('pageTarifario',this)">Tarifario</div>
   <div class="nav-spacer"></div>
   <button class="theme-toggle" onclick="toggleTheme()">
     <span id="themeIcon">☀️</span><span id="themeLabel">Día</span>
@@ -555,12 +562,16 @@ input::placeholder{color:#404040;}
 
   <div class="card">
     <div class="sec-tag">01 — Zona de operación</div>
-    <div class="zone-row" id="zonePills">
-      <div class="zone-pill active" data-zone="caba" onclick="setZona(this)">CABA</div>
-      <div class="zone-pill" data-zone="norte_cercano" onclick="setZona(this)">Zona Norte · hasta Tortuguitas</div>
-      <div class="zone-pill" data-zone="norte_lejano" onclick="setZona(this)">Pilar / Tigre</div>
+    <div class="zone-row" id="zonePills"></div>
+    <div class="zone-note" style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;">
+      <span>Movida del prestador: <span id="movimientoLabel">$17.000</span></span>
+      <div id="movidaToggleWrap" style="display:flex;align-items:center;gap:6px;cursor:pointer;" onclick="toggleMovidaActual()">
+        <div id="movidaToggleTrack" style="width:32px;height:18px;border-radius:20px;background:var(--accent);position:relative;transition:background .2s;flex-shrink:0;">
+          <div id="movidaToggleThumb" style="position:absolute;top:2px;right:2px;width:14px;height:14px;border-radius:50%;background:#fff;transition:all .2s;box-shadow:0 1px 3px rgba(0,0,0,.3);"></div>
+        </div>
+        <span id="movidaToggleLabel" style="font-size:11px;color:var(--accent);">Activa</span>
+      </div>
     </div>
-    <div class="zone-note">Movida del prestador: <span id="movimientoLabel">$17.000</span></div>
 
     <div class="sec-tag" style="margin-top:4px;">02 — Tipo de factura</div>
     <div class="factura-row">
@@ -696,7 +707,7 @@ input::placeholder{color:#404040;}
         <div class="comprobante-box">
           <div class="comprobante-title">✅ Viaje completado</div>
           <div id="comprobanteRows"></div>
-          <button class="btn-comprobante-print" onclick="window.print()">🖨️ Imprimir comprobante</button>
+          <button class="btn-comprobante-print" onclick="abrirComprobanteModal()">🖨️ Imprimir comprobante</button>
         </div>
       </div>
     </div>
@@ -797,12 +808,93 @@ input::placeholder{color:#404040;}
 </div>
 </div>
 
+<!-- TARIFARIO -->
+<div class="page" id="pageTarifario">
+<div class="hist-wrap">
+
+  <div class="hist-top">
+    <h2>Tarifario</h2>
+    <div style="font-size:12px;color:var(--muted);">Los cambios se guardan automáticamente y se aplican en la calculadora.</div>
+  </div>
+
+  <!-- TRAMOS -->
+  <div class="card" style="margin-bottom:16px;">
+    <div class="sec-tag" style="padding:14px 18px 0;">Tramos por distancia</div>
+    <div style="padding:14px 18px;">
+      <div style="display:grid;grid-template-columns:1fr 1fr 1fr 40px;gap:10px;margin-bottom:8px;">
+        <div style="font-size:9px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:var(--muted);">Hasta (km)</div>
+        <div style="font-size:9px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:var(--muted);">Tarifa sin IVA ($)</div>
+        <div style="font-size:9px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:var(--muted);">Nombre del tramo</div>
+        <div></div>
+      </div>
+      <div id="tarifaRows"></div>
+      <button onclick="agregarTramo()" style="margin-top:10px;padding:8px 14px;border-radius:5px;border:1px dashed var(--border);background:transparent;color:var(--muted);font-family:'Inter',sans-serif;font-size:11px;font-weight:600;cursor:pointer;width:100%;transition:all .2s;" onmouseover="this.style.borderColor='var(--accent)';this.style.color='var(--accent)'" onmouseout="this.style.borderColor='var(--border)';this.style.color='var(--muted)'">
+        + Agregar tramo
+      </button>
+    </div>
+  </div>
+
+  <!-- ZONAS / MOVIDAS -->
+  <div class="card" style="margin-bottom:16px;">
+    <div class="sec-tag" style="padding:14px 18px 0;">Zonas y movida del prestador</div>
+    <div style="padding:14px 18px;">
+      <div style="display:grid;grid-template-columns:1fr 1fr 40px;gap:10px;margin-bottom:8px;">
+        <div style="font-size:9px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:var(--muted);">Nombre de zona</div>
+        <div style="font-size:9px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:var(--muted);">Movida ($)</div>
+        <div></div>
+      </div>
+      <div id="zonaRows"></div>
+      <button onclick="agregarZona()" style="margin-top:10px;padding:8px 14px;border-radius:5px;border:1px dashed var(--border);background:transparent;color:var(--muted);font-family:'Inter',sans-serif;font-size:11px;font-weight:600;cursor:pointer;width:100%;transition:all .2s;" onmouseover="this.style.borderColor='var(--accent)';this.style.color='var(--accent)'" onmouseout="this.style.borderColor='var(--border)';this.style.color='var(--muted)'">
+        + Agregar zona
+      </button>
+    </div>
+  </div>
+
+  <!-- PREVIEW -->
+  <div class="card">
+    <div class="sec-tag" style="padding:14px 18px 0;">Vista previa del tarifario actual</div>
+    <div style="padding:14px 18px;">
+      <div id="tarifaPreview"></div>
+    </div>
+  </div>
+
+</div>
+</div>
+
 </div><!-- /modoAvex -->
 
 <!-- MODAL FOTO -->
 <div class="foto-modal" id="fotoModal" onclick="cerrarFotoModal()">
   <button class="foto-modal-close" onclick="cerrarFotoModal()">✕</button>
   <img id="fotoModalImg" src="" alt="Foto del viaje">
+</div>
+
+<!-- MODAL COMPROBANTE PRINT -->
+<div id="modalCompOverlay" style="position:fixed;inset:0;background:rgba(0,0,0,.85);z-index:10000;display:none;align-items:flex-start;justify-content:center;padding:32px 16px;overflow-y:auto;">
+  <div style="background:#fff;border-radius:10px;width:100%;max-width:700px;overflow:hidden;box-shadow:0 24px 64px rgba(0,0,0,.5);">
+    <div id="compPrintArea" style="padding:40px 48px;font-family:'Inter',sans-serif;color:#111;background:#fff;"></div>
+    <div class="no-print" style="padding:14px 20px;background:#f8f8f8;border-top:1px solid #e8e8e8;display:flex;gap:8px;justify-content:flex-end;">
+      <button onclick="cerrarCompModal()" style="padding:9px 16px;border-radius:5px;border:1px solid #ddd;background:transparent;font-family:'Inter',sans-serif;font-size:12px;font-weight:600;cursor:pointer;">✕ Cerrar</button>
+      <button onclick="window.print()" style="padding:9px 16px;border-radius:5px;border:none;background:#22C55E;color:#000;font-family:'Inter',sans-serif;font-size:12px;font-weight:700;cursor:pointer;display:flex;align-items:center;gap:6px;">
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 6 2 18 2 18 9"/><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/><rect x="6" y="14" width="12" height="8"/></svg>
+        Imprimir / PDF
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL LIQUIDACIÓN PRINT -->
+<div id="modalLiqOverlay" style="position:fixed;inset:0;background:rgba(0,0,0,.85);z-index:10000;display:none;align-items:flex-start;justify-content:center;padding:32px 16px;overflow-y:auto;">
+  <div style="background:#fff;border-radius:10px;width:100%;max-width:700px;overflow:hidden;box-shadow:0 24px 64px rgba(0,0,0,.5);">
+    <div id="liqPrintArea" style="padding:40px 48px;font-family:'Inter',sans-serif;color:#111;background:#fff;"></div>
+    <div class="no-print" style="padding:14px 20px;background:#f8f8f8;border-top:1px solid #e8e8e8;display:flex;gap:8px;justify-content:flex-end;">
+      <button onclick="cerrarLiqModal()" style="padding:9px 16px;border-radius:5px;border:1px solid #ddd;background:transparent;font-family:'Inter',sans-serif;font-size:12px;font-weight:600;cursor:pointer;">✕ Cerrar</button>
+      <button onclick="window.print()" style="padding:9px 16px;border-radius:5px;border:none;background:#22C55E;color:#000;font-family:'Inter',sans-serif;font-size:12px;font-weight:700;cursor:pointer;display:flex;align-items:center;gap:6px;">
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 6 2 18 2 18 9"/><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/><rect x="6" y="14" width="12" height="8"/></svg>
+        Imprimir / PDF
+      </button>
+    </div>
+  </div>
 </div>
 
 <!-- MODAL PRESUPUESTO -->
@@ -820,20 +912,46 @@ input::placeholder{color:#404040;}
 </div>
 
 <script>
-// ── CONFIG ────────────────────────────────────────────────────
-const TARIFAS = [
+// ── CONFIG (editable) ─────────────────────────────────────────
+const TARIFAS_DEFAULT = [
   {max:10,       precio:70000,  label:'Hasta 10 km',  tipo:'Entrada'  },
   {max:15,       precio:90000,  label:'Hasta 15 km',  tipo:'Base'     },
   {max:20,       precio:110000, label:'Hasta 20 km',  tipo:'Estándar' },
   {max:30,       precio:130000, label:'Hasta 30 km',  tipo:'Extendido'},
   {max:Infinity, precio:150000, label:'Más de 30 km', tipo:'Premium'  },
 ];
-const MOVIDA = {
-  caba:          {monto:17000, label:'$17.000 (CABA)'},
-  norte_cercano: {monto:17000, label:'$17.000 (Zona Norte hasta Tortuguitas)'},
-  norte_lejano:  {monto:20000, label:'$20.000 (Pilar / Tigre)'},
+const MOVIDA_DEFAULT = {
+  caba:          {nombre:'CABA',                        monto:17000, activa:true},
+  norte_cercano: {nombre:'Zona Norte · hasta Tortuguitas', monto:17000, activa:true},
+  norte_lejano:  {nombre:'Pilar / Tigre',               monto:20000, activa:true},
 };
-const ZONA_NOMBRES = {caba:'CABA', norte_cercano:'Zona Norte · hasta Tortuguitas', norte_lejano:'Pilar / Tigre'};
+
+function cargarTarifario() {
+  try {
+    const t = localStorage.getItem('avex-tarifas');
+    const m = localStorage.getItem('avex-movidas');
+    let tarifas = t ? JSON.parse(t) : TARIFAS_DEFAULT;
+    // Fix: "Infinity" string → Infinity number al deserializar
+    tarifas = tarifas.map((tr, i) => ({
+      ...tr,
+      max: (tr.max === null || tr.max === 'Infinity' || i === tarifas.length - 1) ? Infinity : Number(tr.max)
+    }));
+    return {
+      tarifas,
+      movidas: m ? JSON.parse(m) : MOVIDA_DEFAULT,
+    };
+  } catch(e) { return { tarifas: TARIFAS_DEFAULT, movidas: MOVIDA_DEFAULT }; }
+}
+
+let { tarifas: TARIFAS, movidas: MOVIDA } = cargarTarifario();
+
+// Migrar movidas viejas sin campo activa/nombre
+Object.keys(MOVIDA).forEach(k => {
+  if (MOVIDA[k].activa === undefined) MOVIDA[k].activa = true;
+  if (!MOVIDA[k].nombre) MOVIDA[k].nombre = MOVIDA[k].label?.replace(/\$[\d.,]+ \(/,'').replace(/\)/,'').trim() || k;
+});
+
+const ZONA_NOMBRES = new Proxy({}, { get: (_, k) => MOVIDA[k]?.nombre || k });
 const M_ORDEN = ['pendiente','en-camino','en-origen','en-destino','cobro','completado'];
 
 let zonaActual = 'caba';
@@ -852,6 +970,212 @@ function showPage(id, tab) {
   tab.classList.add('active');
   if (id === 'pageHistorial') renderHistorial();
   if (id === 'pageLiquidaciones') renderLiquidaciones();
+  if (id === 'pageTarifario') renderTarifario();
+}
+
+// ── TARIFARIO EDITOR ──────────────────────────────────────────
+function renderTarifario() {
+  renderFilasTarifas();
+  renderFilasZonas();
+  renderPreviewTarifario();
+}
+
+function renderFilasZonas() {
+  const container = document.getElementById('zonaRows');
+  if (!container) return;
+  const keys = Object.keys(MOVIDA);
+  container.innerHTML = keys.map(k => {
+    const z = MOVIDA[k];
+    return `<div style="display:grid;grid-template-columns:1fr 1fr 40px;gap:10px;margin-bottom:8px;align-items:center;">
+      <input type="text" value="${z.nombre}" placeholder="Ej: CABA"
+        oninput="actualizarZona('${k}','nombre',this.value)"
+        style="background:var(--surface2);border:1px solid var(--border);color:var(--text);font-family:'Inter',sans-serif;font-size:13px;padding:9px 12px;border-radius:5px;outline:none;width:100%;">
+      <input type="number" value="${z.monto}" min="0" step="1000"
+        oninput="actualizarZona('${k}','monto',this.value)"
+        style="background:var(--surface2);border:1px solid var(--border);color:var(--text);font-family:'Inter',sans-serif;font-size:13px;padding:9px 12px;border-radius:5px;outline:none;width:100%;">
+      <div>${keys.length > 1 ? `<button onclick="eliminarZona('${k}')"
+          style="width:32px;height:32px;border-radius:5px;border:1px solid var(--border);background:transparent;color:var(--muted);cursor:pointer;font-size:14px;display:flex;align-items:center;justify-content:center;"
+          onmouseover="this.style.borderColor='#EF4444';this.style.color='#EF4444'"
+          onmouseout="this.style.borderColor='var(--border)';this.style.color='var(--muted)'">✕</button>` : ''}
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function actualizarZona(key, campo, val) {
+  if (campo === 'nombre') MOVIDA[key].nombre = val;
+  if (campo === 'monto')  MOVIDA[key].monto  = parseInt(val) || 0;
+  guardarTarifario();
+}
+
+function toggleZona(key) {
+  MOVIDA[key].activa = !MOVIDA[key].activa;
+  // Si la zona activa actual quedó desactivada, cambiar a la primera activa
+  if (zonaActual === key && !MOVIDA[key].activa) {
+    const primera = Object.keys(MOVIDA).find(k => MOVIDA[k].activa);
+    if (primera) zonaActual = primera;
+  }
+  guardarTarifario();
+  renderFilasZonas();
+  renderZonaPills();
+}
+
+function agregarZona() {
+  const key = 'zona_' + Date.now();
+  MOVIDA[key] = { nombre: 'Nueva zona', monto: 0, activa: true };
+  guardarTarifario();
+  renderFilasZonas();
+  renderZonaPills();
+}
+
+function eliminarZona(key) {
+  if (Object.keys(MOVIDA).length <= 1) { alert('Necesitás al menos una zona.'); return; }
+  if (!confirm(`¿Eliminar la zona "${MOVIDA[key].nombre}"?`)) return;
+  delete MOVIDA[key];
+  if (zonaActual === key) zonaActual = Object.keys(MOVIDA)[0];
+  guardarTarifario();
+  renderFilasZonas();
+  renderZonaPills();
+}
+
+function toggleMovidaActual() {
+  if (!MOVIDA[zonaActual]) return;
+  MOVIDA[zonaActual].activa = MOVIDA[zonaActual].activa === false ? true : false;
+  guardarTarifario();
+  actualizarToggleMovida();
+  const km = parseFloat(document.getElementById('rKm')?.textContent);
+  if (!isNaN(km)) updateRevenue(km);
+  renderTabla(-1);
+}
+
+function actualizarToggleMovida() {
+  const activa = MOVIDA[zonaActual]?.activa !== false;
+  const track  = document.getElementById('movidaToggleTrack');
+  const thumb  = document.getElementById('movidaToggleThumb');
+  const label  = document.getElementById('movidaToggleLabel');
+  const mLabel = document.getElementById('movimientoLabel');
+  if (!track) return;
+  track.style.background = activa ? 'var(--accent)' : 'var(--border)';
+  thumb.style.right = activa ? '2px' : '';
+  thumb.style.left  = activa ? '' : '2px';
+  label.textContent = activa ? 'Activa' : 'Sin movida';
+  label.style.color = activa ? 'var(--accent)' : 'var(--muted)';
+  mLabel.textContent = activa ? fmt(MOVIDA[zonaActual]?.monto || 0) : '$0';
+}
+
+function renderZonaPills() {
+  const container = document.getElementById('zonePills');
+  if (!container) return;
+  const activas = Object.entries(MOVIDA).filter(([,z]) => z.activa !== false || z.activa === false); // mostrar todas
+  // Solo mostrar zonas que no fueron "eliminadas" — mostramos TODAS (activa se refiere a la movida, no a si aparece en cotizador)
+  // Realmente queremos mostrar todas las zonas en pills, y el toggle controla si se aplica la movida
+  const todas = Object.entries(MOVIDA);
+  if (!MOVIDA[zonaActual]) zonaActual = todas[0]?.[0];
+  container.innerHTML = todas.map(([k, z]) =>
+    `<div class="zone-pill ${k===zonaActual?'active':''}" data-zone="${k}" onclick="setZona(this)">${z.nombre}</div>`
+  ).join('');
+  actualizarToggleMovida();
+}
+
+function guardarTarifario() {
+  // Actualizar labels para compatibilidad
+  Object.keys(MOVIDA).forEach(k => {
+    MOVIDA[k].label = `${fmt(MOVIDA[k].monto)} (${MOVIDA[k].nombre})`;
+  });
+  localStorage.setItem('avex-tarifas', JSON.stringify(TARIFAS));
+  localStorage.setItem('avex-movidas', JSON.stringify(MOVIDA));
+  // Refrescar calculadora
+  renderZonaPills();
+  renderTabla(-1);
+  renderPreviewTarifario();
+}
+
+function renderFilasTarifas() {
+  const container = document.getElementById('tarifaRows');
+  container.innerHTML = TARIFAS.map((t, i) => {
+    const esUltimo = i === TARIFAS.length - 1;
+    const maxVal = esUltimo ? '∞' : t.max;
+    return `<div style="display:grid;grid-template-columns:1fr 1fr 1fr 40px;gap:10px;margin-bottom:8px;align-items:center;" id="tramoRow${i}">
+      <div style="position:relative;">
+        <input type="${esUltimo?'text':'number'}" value="${esUltimo?'∞':t.max}"
+          ${esUltimo?'disabled':''} min="1"
+          oninput="actualizarTramo(${i},'max',this.value)"
+          style="background:var(--surface2);border:1px solid var(--border);color:${esUltimo?'var(--muted)':'var(--text)'};font-family:'Inter',sans-serif;font-size:13px;padding:9px 12px;border-radius:5px;outline:none;width:100%;${esUltimo?'opacity:.5':''}">
+        ${!esUltimo?'':'<span style="position:absolute;right:10px;top:50%;transform:translateY(-50%);font-size:11px;color:var(--muted);">km</span>'}
+      </div>
+      <div style="position:relative;">
+        <input type="number" value="${t.precio}" min="0" step="1000"
+          oninput="actualizarTramo(${i},'precio',this.value)"
+          style="background:var(--surface2);border:1px solid var(--border);color:var(--text);font-family:'Inter',sans-serif;font-size:13px;padding:9px 12px;border-radius:5px;outline:none;width:100%;">
+      </div>
+      <div>
+        <input type="text" value="${t.tipo}" placeholder="Nombre"
+          oninput="actualizarTramo(${i},'tipo',this.value)"
+          style="background:var(--surface2);border:1px solid var(--border);color:var(--text);font-family:'Inter',sans-serif;font-size:13px;padding:9px 12px;border-radius:5px;outline:none;width:100%;">
+      </div>
+      <div>
+        ${TARIFAS.length > 1 && !esUltimo ? `<button onclick="eliminarTramo(${i})" title="Eliminar" style="width:32px;height:32px;border-radius:5px;border:1px solid var(--border);background:transparent;color:var(--muted);cursor:pointer;font-size:14px;display:flex;align-items:center;justify-content:center;" onmouseover="this.style.borderColor='#EF4444';this.style.color='#EF4444'" onmouseout="this.style.borderColor='var(--border)';this.style.color='var(--muted)'">✕</button>` : ''}
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function actualizarTramo(i, campo, val) {
+  if (campo === 'max') TARIFAS[i].max = parseInt(val) || 0;
+  else if (campo === 'precio') TARIFAS[i].precio = parseInt(val) || 0;
+  else if (campo === 'tipo') TARIFAS[i].tipo = val;
+  // Actualizar label automáticamente para no-último
+  if (campo === 'max' && i < TARIFAS.length - 1) {
+    TARIFAS[i].label = `Hasta ${TARIFAS[i].max} km`;
+  }
+  guardarTarifario();
+}
+
+function agregarTramo() {
+  // Insertar antes del último (que siempre es Infinity)
+  const ultimo = TARIFAS[TARIFAS.length - 1];
+  const penultimo = TARIFAS[TARIFAS.length - 2];
+  const nuevoMax = penultimo ? (penultimo.max + 10) : 10;
+  TARIFAS.splice(TARIFAS.length - 1, 0, {
+    max: nuevoMax,
+    precio: ultimo.precio,
+    label: `Hasta ${nuevoMax} km`,
+    tipo: 'Nuevo'
+  });
+  guardarTarifario();
+  renderFilasTarifas();
+  renderPreviewTarifario();
+}
+
+function eliminarTramo(i) {
+  if (TARIFAS.length <= 2) { alert('Necesitás al menos 2 tramos.'); return; }
+  TARIFAS.splice(i, 1);
+  guardarTarifario();
+  renderFilasTarifas();
+  renderPreviewTarifario();
+}
+
+function renderPreviewTarifario() {
+  const movida = MOVIDA[zonaActual].monto;
+  document.getElementById('tarifaPreview').innerHTML = `
+    <div style="font-size:10px;color:var(--muted);margin-bottom:10px;">Zona activa: <strong style="color:var(--text);">${ZONA_NOMBRES[zonaActual]}</strong> · Movida: <strong style="color:var(--accent);">${fmt(movida)}</strong></div>
+    <div class="tabla-head"><span>Distancia</span><span>Sin IVA</span><span>Con IVA (21%)</span><span>AVEX 40%</span><span>Prestador 60%</span></div>
+    ${TARIFAS.map((t,i) => {
+      const iva   = t.precio * 0.21;
+      const total = t.precio + iva;
+      const neta  = Math.max(0, t.precio - movida);
+      const avex  = neta * 0.4;
+      const prest = neta * 0.6;
+      const esUltimo = i === TARIFAS.length - 1;
+      return `<div class="tabla-row">
+        <span>${t.label}</span>
+        <span class="price">${fmt(t.precio)}</span>
+        <span class="price" style="color:var(--muted);font-size:11px;">${fmt(total)}</span>
+        <span class="price" style="color:var(--blue);">${fmt(avex)}</span>
+        <span class="price" style="color:var(--accent);">${fmt(prest)}</span>
+      </div>`;
+    }).join('')}
+  `;
 }
 
 // ── DIRECCIÓN ESTRUCTURADA ─────────────────────────────────────
@@ -886,11 +1210,16 @@ function toggleTheme() {
 }
 
 // ── ZONA ──────────────────────────────────────────────────────
+function getMovida(zona) {
+  const z = MOVIDA[zona || zonaActual];
+  return z?.activa !== false ? (z?.monto || 0) : 0;
+}
+
 function setZona(el) {
   document.querySelectorAll('.zone-pill').forEach(p => p.classList.remove('active'));
   el.classList.add('active');
   zonaActual = el.dataset.zone;
-  document.getElementById('movimientoLabel').textContent = fmt(MOVIDA[zonaActual].monto);
+  actualizarToggleMovida();
   renderTabla(-1);
   if (document.getElementById('resultWrap').classList.contains('visible')) {
     const km = parseFloat(document.getElementById('rKm').textContent);
@@ -915,7 +1244,7 @@ function setFactura(el) {
 
 // ── TABLA ─────────────────────────────────────────────────────
 function renderTabla(activeIdx) {
-  const movida = MOVIDA[zonaActual].monto;
+  const movida = getMovida();
   document.getElementById('tablaBody').innerHTML = TARIFAS.map((t,i) => {
     const iva   = facturaActual === 'A' ? t.precio * 0.21 : 0;
     const total = t.precio + iva;
@@ -934,25 +1263,25 @@ renderTabla(-1);
 
 // ── REVENUE ───────────────────────────────────────────────────
 function updateRevenue(km) {
-  const t     = getTarifa(km);
-  const idx   = TARIFAS.indexOf(t);
-  const movida = MOVIDA[zonaActual].monto;
-  const iva   = facturaActual === 'A' ? t.precio * 0.21 : 0;
-  const total = t.precio + iva;
-  const neta  = Math.max(0, t.precio - movida);
-  const prest = neta * 0.6;
-  const avex  = neta * 0.4;
+  const t      = getTarifa(km);
+  const idx    = TARIFAS.indexOf(t);
+  const movida = getMovida();
+  const iva    = facturaActual === 'A' ? t.precio * 0.21 : 0;
+  const total  = t.precio + iva;
+  const neta   = Math.max(0, t.precio - movida);
+  const prest  = neta * 0.6;
+  const avex   = neta * 0.4;
   document.getElementById('rPrice').textContent      = fmt(total);
   document.getElementById('rPriceLabel').textContent = facturaActual === 'A' ? 'Total al cliente (c/ IVA)' : 'Total al cliente (sin IVA)';
   document.getElementById('rTipo').textContent       = t.tipo;
   document.getElementById('rTramo').textContent      = t.label;
-  document.getElementById('rZona').textContent       = ZONA_NOMBRES[zonaActual];
+  document.getElementById('rZona').textContent       = MOVIDA[zonaActual]?.nombre || zonaActual;
   document.getElementById('bBruta').textContent      = fmt(t.precio);
   document.getElementById('bIva').textContent        = iva > 0 ? '+ '+fmt(iva) : '—';
   document.getElementById('bTotal').textContent      = fmt(total);
   document.getElementById('bTotalDesc').textContent  = facturaActual === 'A' ? 'Tarifa + IVA 21%' : 'Sin IVA (Factura C)';
-  document.getElementById('bMovida').textContent     = '− '+fmt(movida);
-  document.getElementById('bMovidaDesc').textContent = MOVIDA[zonaActual].label;
+  document.getElementById('bMovida').textContent     = movida > 0 ? '− '+fmt(movida) : '—';
+  document.getElementById('bMovidaDesc').textContent = movida > 0 ? MOVIDA[zonaActual]?.nombre || '' : 'Sin movida aplicada';
   document.getElementById('bNeta').textContent       = fmt(neta);
   document.getElementById('bPrestador').textContent  = fmt(prest);
   document.getElementById('bAvex').textContent       = fmt(avex);
@@ -1198,22 +1527,62 @@ function actualizarMonitor(viajeId){
   }
 }
 
+let _viajeComprobante = null;
+
 function mostrarComprobanteMonitor(v){
+  _viajeComprobante = v;
   const dur=v.timestamps?.completado&&v.timestamps?.['en-camino']
     ?Math.round((v.timestamps.completado-v.timestamps['en-camino'])/60000)+' min':'—';
   document.getElementById('comprobanteRows').innerHTML=`
-    <div class="comprobante-row"><span class="cl">ID</span><span class="cv">${v.id}</span></div>
-    <div class="comprobante-row"><span class="cl">Prestador</span><span class="cv">${v.prestadorNombre}</span></div>
-    <div class="comprobante-row"><span class="cl">Cliente</span><span class="cv">${v.cliente}</span></div>
+    <div class="comprobante-row"><span class="cl">Prestador</span><span class="cv">${v.prestadorNombre||'—'}</span></div>
+    <div class="comprobante-row"><span class="cl">Cliente</span><span class="cv">${v.cliente||'—'}</span></div>
     <div class="comprobante-row"><span class="cl">Recorrido</span><span class="cv">${v.origen} → ${v.destino}</span></div>
     <div class="comprobante-row"><span class="cl">Distancia</span><span class="cv">${v.km} km</span></div>
     <div class="comprobante-row"><span class="cl">Duración</span><span class="cv">${dur}</span></div>
     <div class="comprobante-row"><span class="cl">Total cobrado</span><span class="cv">${fmt(v.total)}</span></div>
-    <div class="comprobante-row"><span class="cl">Parte prestador</span><span class="cv" style="color:var(--accent)">${fmt(v.montoPrestador)}</span></div>
-    <div class="comprobante-row"><span class="cl">Parte AVEX</span><span class="cv" style="color:var(--blue)">${fmt(v.montoAvex)}</span></div>
-    <div class="comprobante-row"><span class="cl">Cobro</span><span class="cv">${v.formaCobro==='efectivo'?'💵 Efectivo':'🏦 Transferencia'}</span></div>
+    <div class="comprobante-row"><span class="cl">Parte prestador (60%)</span><span class="cv" style="color:var(--accent)">${fmt(v.montoPrestador)}</span></div>
+    <div class="comprobante-row"><span class="cl">Parte AVEX (40%)</span><span class="cv" style="color:var(--blue)">${fmt(v.montoAvex)}</span></div>
+    <div class="comprobante-row"><span class="cl">Forma de cobro</span><span class="cv">${v.formaCobro==='efectivo'?'💵 Efectivo':'🏦 Transferencia a AVEX'}</span></div>
+    <div class="comprobante-row"><span class="cl">Zona</span><span class="cv">${v.zona||'—'}</span></div>
   `;
   document.getElementById('monitorComprobante').style.display='block';
+}
+
+function abrirComprobanteModal(){
+  const v = _viajeComprobante;
+  if (!v) return;
+  const dur=v.timestamps?.completado&&v.timestamps?.['en-camino']
+    ?Math.round((v.timestamps.completado-v.timestamps['en-camino'])/60000)+' min':'—';
+  const fecha=new Date(v.timestamps?.completado||Date.now()).toLocaleDateString('es-AR',{day:'2-digit',month:'2-digit',year:'numeric',hour:'2-digit',minute:'2-digit'});
+
+  const row = (label, value, style='') =>
+    `<div style="display:flex;justify-content:space-between;padding:9px 0;border-bottom:1px solid #f0f0f0;font-size:13px;">
+      <span style="color:#666;">${label}</span>
+      <span style="font-weight:600;${style}">${value}</span>
+    </div>`;
+
+  document.getElementById('compPrintArea').innerHTML = `
+    ${brandHeader('Comprobante de viaje', 'Servicio completado', `<div><strong>ID</strong> ${v.id}</div><div><strong>Fecha</strong> ${fecha}</div>`)}
+    ${row('Prestador', v.prestadorNombre||'—')}
+    ${row('Cliente', v.cliente||'—')}
+    ${row('Vehículo', (v.vehiculoCliente||'—') + ' · ' + (v.patenteCliente||'—'))}
+    ${row('Recorrido', v.origen + ' → ' + v.destino)}
+    ${row('Distancia', v.km + ' km')}
+    ${row('Duración', dur)}
+    ${row('Total cobrado', fmt(v.total), 'font-size:15px;')}
+    ${row('Parte prestador (60%)', fmt(v.montoPrestador), 'color:#22C55E;')}
+    ${row('Parte AVEX (40%)', fmt(v.montoAvex), 'color:#3B82F6;')}
+    ${row('Forma de cobro', v.formaCobro==='efectivo'?'💵 Efectivo':'🏦 Transferencia a AVEX')}
+    ${row('Zona', v.zona||'—')}
+    ${brandFooter()}
+  `;
+  document.getElementById('modalCompOverlay').style.display = 'flex';
+  document.body.style.overflow = 'hidden';
+}
+
+function cerrarCompModal(){
+  document.getElementById('modalCompOverlay').style.display = 'none';
+  document.body.style.overflow = '';
 }
 
 function copiarLink(){
@@ -1454,6 +1823,32 @@ document.getElementById('modalOverlay').addEventListener('click',e=>{
   if(e.target===document.getElementById('modalOverlay'))cerrarPresupuesto();
 });
 
+// ── BRAND HEADER (imprimibles) ────────────────────────────────
+function brandHeader(titulo, subtitulo, meta) {
+  return `
+    <div style="display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:24px;padding-bottom:18px;border-bottom:3px solid #22C55E;">
+      <div style="display:flex;align-items:center;gap:14px;">
+        <img src="https://avexargentina.com/logo_avex.png" alt="AVEX" style="height:32px;" onerror="this.style.display='none'">
+        <div>
+          <div style="font-size:9px;font-weight:700;letter-spacing:3px;text-transform:uppercase;color:#22C55E;margin-bottom:2px;">Asistencia vehicular express</div>
+          <div style="font-size:16px;font-weight:700;color:#111;">${titulo}</div>
+          ${subtitulo?`<div style="font-size:11px;color:#666;margin-top:1px;">${subtitulo}</div>`:''}
+        </div>
+      </div>
+      <div style="text-align:right;font-size:11px;color:#666;line-height:1.8;">
+        ${meta}
+        <div style="margin-top:2px;font-size:10px;color:#aaa;">avexargentina.com · +54 9 11 6829-4554</div>
+      </div>
+    </div>`;
+}
+
+function brandFooter() {
+  return `<div style="margin-top:24px;padding-top:14px;border-top:1px solid #e8e8e8;font-size:10px;color:#aaa;text-align:center;line-height:1.8;">
+    <strong style="color:#22C55E;">AVEX</strong> · Asistencia vehicular express · CABA, Zona Norte, Zona Sur y La Plata<br>
+    WhatsApp: +54 9 11 6829-4554 · avexargentina.com
+  </div>`;
+}
+
 function abrirPresupuesto(){
   const d=window._presData;
   if(!d){alert('Primero calculá una ruta para generar el presupuesto.');return;}
@@ -1472,16 +1867,14 @@ function abrirPresupuesto(){
   const fecha=new Date().toLocaleDateString('es-AR',{day:'2-digit',month:'2-digit',year:'numeric'});
   const hora=new Date().toLocaleTimeString('es-AR',{hour:'2-digit',minute:'2-digit'});
   const nro='P-'+Date.now().toString().slice(-6);
-  const centerLat=((parseFloat(d.oLat)+parseFloat(d.dLat))/2).toFixed(5);
-  const centerLon=((parseFloat(d.oLon)+parseFloat(d.dLon))/2).toFixed(5);
-  const staticMap=`https://staticmap.openstreetmap.de/staticmap.php?center=${centerLat},${centerLon}&zoom=12&size=580x220&maptype=mapnik&markers=${d.oLat},${d.oLon},red-pushpin|${d.dLat},${d.dLon},green-pushpin`;
+  const zoom = parseFloat(d.km) > 20 ? 11 : 13;
+  const staticMap=`https://www.openstreetmap.org/export/embed.html?bbox=${Math.min(d.oLon,d.dLon)-0.05},${Math.min(d.oLat,d.dLat)-0.05},${Math.max(d.oLon,d.dLon)+0.05},${Math.max(d.oLat,d.dLat)+0.05}&layer=mapnik&marker=${d.oLat},${d.oLon}`;
   document.getElementById('printArea').innerHTML=`
-    <div class="pres-header">
-      <div><img class="pres-logo" src="https://avexargentina.com/logo_avex.png" alt="AVEX" onerror="this.style.display='none'"></div>
-      <div class="pres-meta"><div><strong>Presupuesto N°</strong> ${nro}</div><div><strong>Fecha</strong> ${fecha} · ${hora}</div><div>avexargentina.com</div></div>
-    </div>
-    <div class="pres-title">Presupuesto de traslado vehicular</div>
-    <div class="pres-subtitle">Asistencia vehicular express · AVEX Argentina</div>
+    ${brandHeader(
+      'Presupuesto de traslado',
+      'Servicio de asistencia vehicular',
+      `<div><strong>N°</strong> ${nro}</div><div><strong>Fecha</strong> ${fecha} · ${hora}</div>`
+    )}
     <div class="pres-section"><div class="pres-sec-label">Cliente</div><div class="pres-grid">
       <div class="pres-field"><div class="pres-field-label">Nombre / Empresa</div><div class="pres-field-value">${cliente}</div></div>
       <div class="pres-field"><div class="pres-field-label">Contacto</div><div class="pres-field-value">${tel}</div></div>
@@ -1506,7 +1899,6 @@ function abrirPresupuesto(){
         <div class="pres-field"><div class="pres-field-label">Distancia</div><div class="pres-field-value">${d.km} km</div></div>
         <div class="pres-field"><div class="pres-field-label">Tiempo estimado</div><div class="pres-field-value">${fmtMin(d.secs)}</div></div>
       </div>
-      <div class="pres-map-box"><img src="${staticMap}" alt="Mapa" style="width:100%;height:100%;object-fit:cover;display:block;"></div>
     </div>
     <div class="pres-total-box">
       <div><div class="pres-total-label">Total del servicio</div><div><span class="pres-total-price">${fmt(total)}</span><span class="pres-total-cur">ARS</span></div></div>
@@ -1518,7 +1910,8 @@ function abrirPresupuesto(){
       <div class="pres-detail-row"><span class="label">Tramo tarifario</span><span class="value">${t.label}</span></div>
       <div class="pres-detail-row" style="font-weight:700;"><span class="label">Total a cobrar</span><span class="value" style="color:#22C55E;font-size:15px;">${fmt(total)}</span></div>
     </div>
-    <div class="pres-footer">Este presupuesto es válido por 24 horas desde su emisión.<br><strong>AVEX</strong> · Asistencia vehicular express · WhatsApp: +54 9 11 6829-4554 · avexargentina.com</div>
+    <div style="margin-top:8px;font-size:11px;color:#888;text-align:center;">Presupuesto válido por 24 horas desde su emisión.</div>
+    ${brandFooter()}
   `;
   document.getElementById('modalOverlay').classList.add('open');
   document.body.style.overflow='hidden';
@@ -1849,7 +2242,7 @@ function renderLiquidaciones() {
           <div class="liq-res-item"><div class="liq-res-label">Saldo neto</div><div class="liq-res-value ${saldoClass}">${saldoMonto}</div></div>
         </div>
         <div style="display:flex;gap:8px;margin-top:12px;flex-wrap:wrap;">
-          <button class="liq-print-btn" onclick="window.print()">🖨️ Imprimir liquidación de ${nombre.split(' ')[0]}</button>
+          <button class="liq-print-btn" onclick="imprimirLiquidacion(this)">🖨️ Imprimir liquidación de ${nombre.split(' ')[0]}</button>
           <button class="liq-print-btn" style="border-color:var(--accent);color:var(--accent);"
             data-liq-nombre="${nombre.replace(/"/g,'&quot;')}"
             data-liq-ids="${vjs.map(v=>v.id).join(',')}"
@@ -1896,6 +2289,59 @@ function exportarLiquidacionCSV() {
   a.download = `avex-liquidaciones-${new Date().toISOString().slice(0,10)}.csv`;
   a.click();
   URL.revokeObjectURL(url);
+}
+
+function cerrarLiqModal(){
+  document.getElementById('modalLiqOverlay').style.display='none';
+  document.body.style.overflow='';
+}
+
+function imprimirLiquidacion(btn){
+  // Subir al liq-body para extraer datos
+  const body = btn.closest('.liq-body');
+  const card = btn.closest('.liq-card');
+  const nombre  = card.querySelector('.liq-nombre')?.textContent || '';
+  const meta    = card.querySelector('.liq-meta')?.textContent || '';
+  const saldoLabel = card.querySelector('.liq-saldo-label')?.textContent || '';
+  const saldoMonto = card.querySelector('.liq-saldo-monto')?.textContent || '';
+  const saldoClass = card.querySelector('.liq-saldo-monto')?.className || '';
+  const color = saldoClass.includes('pagar') ? '#22C55E' : saldoClass.includes('cobrar') ? '#EF4444' : '#888';
+  const fecha = new Date().toLocaleDateString('es-AR',{day:'2-digit',month:'2-digit',year:'numeric',hour:'2-digit',minute:'2-digit'});
+
+  // Tabla de viajes — clonar el thead y las filas del liq-body
+  const thead = body.querySelector('.liq-thead')?.outerHTML || '';
+  const filas = [...body.querySelectorAll('.liq-row')].map(r => r.outerHTML).join('');
+
+  // Resumen
+  const resItems = [...body.querySelectorAll('.liq-res-item')].map(el => {
+    const lbl = el.querySelector('.liq-res-label')?.textContent || '';
+    const val = el.querySelector('.liq-res-value')?.textContent || '';
+    const style = el.querySelector('.liq-res-value')?.getAttribute('style') || '';
+    return `<div style="flex:1;min-width:110px;background:#f8f8f8;border:1px solid #e8e8e8;border-radius:6px;padding:10px 14px;">
+      <div style="font-size:9px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:#888;margin-bottom:4px;">${lbl}</div>
+      <div style="font-size:15px;font-weight:700;${style}">${val}</div>
+    </div>`;
+  }).join('');
+
+  document.getElementById('liqPrintArea').innerHTML = `
+    ${brandHeader('Liquidación de prestador', nombre, `<div><strong>Fecha</strong> ${fecha}</div><div>${meta}</div>`)}
+    <div style="display:flex;align-items:center;justify-content:space-between;background:#f0fdf4;border:1px solid #bbf7d0;border-radius:8px;padding:14px 18px;margin-bottom:20px;">
+      <div style="font-size:13px;font-weight:600;color:#166534;">${saldoLabel}</div>
+      <div style="font-size:22px;font-weight:700;color:${color};">${saldoMonto}</div>
+    </div>
+    <div style="font-size:9px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:#888;margin-bottom:8px;">Detalle de viajes</div>
+    <div style="border:1px solid #e8e8e8;border-radius:8px;overflow:hidden;margin-bottom:16px;">
+      <div style="display:grid;grid-template-columns:80px 1fr 100px 120px 110px 130px;padding:8px 12px;background:#f8f8f8;border-bottom:1px solid #e8e8e8;">
+        ${['Fecha','Recorrido','Total','Forma cobro','A liquidar','Acción'].map(h=>`<span style="font-size:9px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:#888;">${h}</span>`).join('')}
+      </div>
+      <div style="padding:0 12px;">${filas}</div>
+    </div>
+    <div style="display:flex;gap:10px;flex-wrap:wrap;margin-bottom:8px;">${resItems}</div>
+    ${brandFooter()}
+  `;
+
+  document.getElementById('modalLiqOverlay').style.display = 'flex';
+  document.body.style.overflow = 'hidden';
 }
 
 // ── LIQUIDACIONES PASADAS ─────────────────────────────────────
@@ -2052,6 +2498,7 @@ if (!esPrestador) {
     document.getElementById('loginScreen').classList.remove('hidden');
   }
   if(localStorage.getItem('avex-theme')==='light')toggleTheme();
+  renderZonaPills();
   actualizarContadorHistorial();
   setInterval(()=>{ if(viajeActivoId)actualizarMonitor(viajeActivoId); },3000);
 }
