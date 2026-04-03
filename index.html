@@ -277,6 +277,18 @@ input::placeholder{color:#404040;}
 .hist-btn.danger:hover{border-color:var(--red);color:var(--red);}
 .hist-btn-clear{padding:8px 16px;border-radius:5px;border:1px solid var(--border);background:transparent;color:var(--muted);font-family:'Inter',sans-serif;font-size:11px;font-weight:600;cursor:pointer;transition:all .2s;}
 .hist-btn-clear:hover{border-color:var(--red);color:var(--red);}
+.hist-btn-export{padding:8px 14px;border-radius:5px;border:1px solid var(--accent);background:transparent;color:var(--accent);font-family:'Inter',sans-serif;font-size:11px;font-weight:600;cursor:pointer;transition:all .2s;display:flex;align-items:center;gap:6px;}
+.hist-btn-export:hover{background:var(--accent-dim);}
+
+/* FILTROS */
+.hist-filtros{background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:16px 18px;display:flex;flex-wrap:wrap;gap:12px;align-items:flex-end;}
+.hist-filtro-group{display:flex;flex-direction:column;gap:5px;min-width:130px;flex:1;}
+.hist-filtro-group label{font-size:9px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:var(--muted);}
+.hist-filtro-group input,.hist-filtro-group select{background:var(--surface2);border:1px solid var(--border);color:var(--text);font-family:'Inter',sans-serif;font-size:12px;padding:8px 10px;border-radius:5px;outline:none;transition:border-color .2s;width:100%;}
+.hist-filtro-group input:focus,.hist-filtro-group select:focus{border-color:var(--accent);}
+.hist-filtro-group select option{background:var(--surface2);}
+.hist-filtro-reset{padding:8px 14px;border-radius:5px;border:1px solid var(--border);background:transparent;color:var(--muted);font-family:'Inter',sans-serif;font-size:11px;font-weight:600;cursor:pointer;transition:all .2s;align-self:flex-end;white-space:nowrap;}
+.hist-filtro-reset:hover{border-color:var(--accent);color:var(--accent);}
 
 .btn-logout {
   display:flex; align-items:center; gap:5px;
@@ -391,6 +403,32 @@ input::placeholder{color:#404040;}
 .p-btn-accion.origen{background:var(--blue);color:#fff;}
 .p-btn-accion.destino{background:var(--orange);color:#000;}
 .p-btn-accion:hover{opacity:.88;}
+.p-nav-btns{display:flex;gap:8px;margin-bottom:10px;}
+.p-btn-nav{flex:1;padding:11px;border:none;border-radius:8px;font-family:'Inter',sans-serif;font-size:12px;font-weight:700;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:7px;transition:opacity .2s;}
+.p-btn-nav.gmaps{background:#4285F4;color:#fff;}
+.p-btn-nav.waze{background:#33CCFF;color:#000;}
+.p-btn-nav:hover{opacity:.85;}
+.p-foto-card{background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:16px;}
+.p-foto-title{font-size:12px;font-weight:700;color:var(--text);margin-bottom:4px;}
+.p-foto-sub{font-size:11px;color:var(--muted);margin-bottom:12px;}
+.p-foto-btns{display:grid;grid-template-columns:1fr 1fr;gap:10px;}
+.p-foto-slot{border:2px dashed var(--border);border-radius:8px;padding:16px 10px;text-align:center;cursor:pointer;transition:all .2s;position:relative;overflow:hidden;}
+.p-foto-slot:hover{border-color:var(--accent);}
+.p-foto-slot.taken{border-style:solid;border-color:var(--accent);}
+.p-foto-slot input{position:absolute;inset:0;opacity:0;cursor:pointer;width:100%;height:100%;}
+.p-foto-slot-icon{font-size:24px;margin-bottom:6px;}
+.p-foto-slot-label{font-size:11px;font-weight:700;color:var(--text);}
+.p-foto-slot-status{font-size:10px;color:var(--muted);margin-top:2px;}
+.p-foto-slot.taken .p-foto-slot-status{color:var(--accent);}
+.p-foto-preview{width:100%;border-radius:6px;margin-top:8px;display:none;max-height:140px;object-fit:cover;}
+.p-foto-preview.visible{display:block;}
+.hist-fotos{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px;}
+.hist-foto-thumb{width:80px;height:60px;object-fit:cover;border-radius:6px;border:1px solid var(--border);cursor:pointer;transition:transform .2s;}
+.hist-foto-thumb:hover{transform:scale(1.05);}
+.foto-modal{position:fixed;inset:0;background:rgba(0,0,0,.92);z-index:99999;display:none;align-items:center;justify-content:center;padding:20px;}
+.foto-modal.open{display:flex;}
+.foto-modal img{max-width:100%;max-height:90vh;border-radius:8px;object-fit:contain;}
+.foto-modal-close{position:absolute;top:16px;right:16px;background:rgba(255,255,255,.15);border:none;color:#fff;font-size:20px;width:36px;height:36px;border-radius:50%;cursor:pointer;}
 
 /* PRINT */
 @media print{
@@ -402,7 +440,45 @@ input::placeholder{color:#404040;}
   #printArea{padding:24px 32px;}
   .pres-map-box{height:200px;}
 }
-@media(max-width:540px){
+/* ── LIQUIDACIONES ── */
+.liq-card{background:var(--surface);border:1px solid var(--border);border-radius:8px;overflow:hidden;margin-bottom:12px;}
+.liq-card.expanded .liq-body{display:block;}
+.liq-card.expanded .liq-header{background:var(--surface2);}
+.liq-header{display:flex;align-items:center;gap:12px;padding:14px 18px;cursor:pointer;border-bottom:1px solid transparent;}
+.liq-card.expanded .liq-header{border-bottom-color:var(--border);}
+.liq-avatar{width:36px;height:36px;border-radius:50%;background:var(--accent-dim);border:1px solid var(--accent);display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:700;color:var(--accent);flex-shrink:0;}
+.liq-info{flex:1;}
+.liq-nombre{font-size:14px;font-weight:700;color:var(--text);}
+.liq-meta{font-size:11px;color:var(--muted);margin-top:2px;}
+.liq-saldo{text-align:right;}
+.liq-saldo-label{font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:.8px;margin-bottom:2px;}
+.liq-saldo-monto{font-size:18px;font-weight:700;}
+.liq-saldo-monto.cobrar{color:#EF4444;}
+.liq-saldo-monto.pagar{color:var(--accent);}
+.liq-saldo-monto.neutro{color:var(--muted);}
+.liq-body{display:none;padding:14px 18px;}
+.liq-thead{display:grid;grid-template-columns:80px 1fr 100px 120px 110px 130px;gap:8px;padding:8px 0;border-bottom:1px solid var(--border);margin-bottom:4px;}
+.liq-thead span{font-size:9px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:var(--muted);}
+.liq-row{display:grid;grid-template-columns:80px 1fr 100px 120px 110px 130px;gap:8px;padding:9px 0;border-bottom:1px solid #1a1a1a;align-items:center;}
+.liq-row:last-child{border-bottom:none;}
+.liq-row span{font-size:12px;color:var(--text);}
+.liq-cobro-pill{font-size:9px;font-weight:700;padding:3px 8px;border-radius:20px;white-space:nowrap;}
+.liq-cobro-pill.efectivo{background:#1a1a0a;color:var(--orange);border:1px solid var(--orange);}
+.liq-cobro-pill.transferencia{background:var(--blue-dim);color:var(--blue);border:1px solid var(--blue);}
+.liq-accion-pill{font-size:9px;font-weight:700;padding:3px 8px;border-radius:20px;white-space:nowrap;}
+.liq-accion-pill.cobrar{background:var(--red-dim,#450a0a);color:#EF4444;border:1px solid #EF4444;}
+.liq-accion-pill.pagar{background:var(--accent-dim);color:var(--accent);border:1px solid var(--accent);}
+.liq-resumen{margin-top:14px;padding:14px 16px;background:var(--surface2);border-radius:6px;display:flex;gap:24px;flex-wrap:wrap;border:1px solid var(--border);}
+.liq-res-item{display:flex;flex-direction:column;gap:3px;}
+.liq-res-label{font-size:9px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:var(--muted);}
+.liq-res-value{font-size:15px;font-weight:700;}
+.liq-print-btn{margin-top:12px;padding:8px 14px;border-radius:5px;border:1px solid var(--border);background:transparent;color:var(--muted);font-family:'Inter',sans-serif;font-size:11px;font-weight:600;cursor:pointer;transition:all .2s;display:inline-flex;align-items:center;gap:6px;}
+.liq-print-btn:hover{border-color:var(--accent);color:var(--accent);}
+.liq-empty{text-align:center;padding:60px 20px;color:var(--muted);}
+.liq-empty-icon{font-size:40px;margin-bottom:12px;}
+@media(max-width:600px){.liq-thead,.liq-row{grid-template-columns:70px 1fr 90px 100px;}.liq-thead span:nth-child(5),.liq-thead span:nth-child(6),.liq-row span:nth-child(5),.liq-row span:nth-child(6){display:none;}}
+
+
   .route-grid{grid-template-columns:1fr;}
   .tabla-head,.tabla-row{grid-template-columns:2fr 1fr 1fr;}
   .tabla-head span:last-child,.tabla-row span:last-child{display:none;}
@@ -462,6 +538,7 @@ input::placeholder{color:#404040;}
   </div>
   <div class="nav-tab active" onclick="showPage('pageCalc',this)">Calculadora</div>
   <div class="nav-tab" onclick="showPage('pageHistorial',this)" id="tabHistorial">Historial <span id="histCount" style="background:var(--accent);color:#000;font-size:9px;font-weight:700;padding:1px 6px;border-radius:10px;margin-left:4px;display:none;">0</span></div>
+  <div class="nav-tab" onclick="showPage('pageLiquidaciones',this)">Liquidaciones</div>
   <div class="nav-spacer"></div>
   <button class="theme-toggle" onclick="toggleTheme()">
     <span id="themeIcon">☀️</span><span id="themeLabel">Día</span>
@@ -493,21 +570,23 @@ input::placeholder{color:#404040;}
     <div class="fact-note" id="factNote" style="margin-top:8px;margin-bottom:16px;">Factura A: el IVA se suma al presupuesto y se descuenta en el desglose.</div>
 
     <div class="sec-tag">03 — Origen y destino</div>
-    <div class="route-grid">
-      <div class="field">
-        <label>Origen <span style="color:var(--muted);font-weight:400;text-transform:none;letter-spacing:0;">(escribí la dirección completa)</span></label>
-        <input type="text" id="origenInput" placeholder="Ej: Viamonte 300, CABA" autocomplete="off" oninput="suggest(this,'origenList')">
-        <div class="suggestions" id="origenList"></div>
-      </div>
-      <div class="field">
-        <label>Destino <span style="color:var(--muted);font-weight:400;text-transform:none;letter-spacing:0;">(escribí la dirección completa)</span></label>
-        <input type="text" id="destinoInput" placeholder="Ej: Av. Maipú 1300, Vicente López" autocomplete="off" oninput="suggest(this,'destinoList')">
-        <div class="suggestions" id="destinoList"></div>
-      </div>
+
+    <label style="font-size:10px;font-weight:600;letter-spacing:1px;text-transform:uppercase;color:var(--muted);margin-bottom:8px;display:block;">Origen</label>
+    <div style="display:grid;grid-template-columns:2fr 1fr 1fr;gap:10px;margin-bottom:14px;">
+      <div class="field"><label>Calle</label><input type="text" id="origenCalle" placeholder="Ej: Viamonte" oninput="actualizarDireccion('origen')"></div>
+      <div class="field"><label>Altura</label><input type="text" id="origenAltura" placeholder="300" oninput="actualizarDireccion('origen')"></div>
+      <div class="field"><label>Localidad</label><input type="text" id="origenLocalidad" placeholder="CABA" oninput="actualizarDireccion('origen')"></div>
     </div>
-    <div style="font-size:11px;color:var(--muted);margin-top:6px;margin-bottom:4px;">
-      💡 Si no aparecen sugerencias, escribí la dirección completa igual y presioná Calcular — el sistema la va a encontrar.
+    <input type="hidden" id="origenInput">
+
+    <label style="font-size:10px;font-weight:600;letter-spacing:1px;text-transform:uppercase;color:var(--muted);margin-bottom:8px;display:block;">Destino</label>
+    <div style="display:grid;grid-template-columns:2fr 1fr 1fr;gap:10px;margin-bottom:6px;">
+      <div class="field"><label>Calle</label><input type="text" id="destinoCalle" placeholder="Ej: Av. Maipú" oninput="actualizarDireccion('destino')"></div>
+      <div class="field"><label>Altura</label><input type="text" id="destinoAltura" placeholder="1300" oninput="actualizarDireccion('destino')"></div>
+      <div class="field"><label>Localidad</label><input type="text" id="destinoLocalidad" placeholder="Vicente López" oninput="actualizarDireccion('destino')"></div>
     </div>
+    <input type="hidden" id="destinoInput">
+    <div style="font-size:11px;color:var(--muted);margin-bottom:4px;" id="dirPreview"></div>
 
     <div class="sec-tag" style="margin-top:20px;">04 — Cliente y vehículo</div>
     <div class="route-grid" style="margin-bottom:12px;">
@@ -521,9 +600,20 @@ input::placeholder{color:#404040;}
 
     <div class="sec-tag" style="margin-top:20px;">05 — Datos del prestador</div>
     <div class="route-grid" style="margin-bottom:12px;">
-      <div class="field"><label>Nombre del prestador</label><input type="text" id="prestadorNombreInput" placeholder="Ej: Carlos Rodríguez"></div>
+      <div class="field">
+        <label>Prestador</label>
+        <select id="prestadorSelect" onchange="seleccionarPrestador(this)" style="background:var(--surface2);border:1px solid var(--border);color:var(--text);font-family:'Inter',sans-serif;font-size:13px;padding:11px 14px;border-radius:5px;outline:none;width:100%;">
+          <option value="">— Seleccionar prestador —</option>
+          <option value="facundo">Facundo Ocampos</option>
+          <option value="manual">+ Ingresar manualmente</option>
+        </select>
+      </div>
       <div class="field"><label>Teléfono del prestador</label><input type="text" id="prestadorTelInput" placeholder="Ej: 11 4444-5555"></div>
     </div>
+    <div class="route-grid" id="prestadorManualRow" style="display:none;margin-bottom:12px;">
+      <div class="field"><label>Nombre (manual)</label><input type="text" id="prestadorNombreInput" placeholder="Ej: Carlos Rodríguez"></div>
+    </div>
+    <input type="hidden" id="prestadorNombreHidden">
     <div class="route-grid">
       <div class="field"><label>Vehículo del prestador</label><input type="text" id="prestadorVehiculoInput" placeholder="Ej: Ford Transit Blanca"></div>
       <div class="field"><label>Patente del prestador</label><input type="text" id="prestadorPatenteInput" placeholder="Ej: AC 456 EF" style="text-transform:uppercase;"></div>
@@ -630,14 +720,90 @@ input::placeholder{color:#404040;}
 <div class="hist-wrap">
   <div class="hist-top">
     <h2>Historial de viajes</h2>
-    <button class="hist-btn-clear" onclick="limpiarHistorial()">Limpiar historial</button>
+    <div style="display:flex;gap:8px;flex-wrap:wrap;">
+      <button class="hist-btn-export" onclick="exportarCSV()">
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+        Exportar CSV
+      </button>
+      <button class="hist-btn-clear" onclick="limpiarHistorial()">Limpiar</button>
+    </div>
   </div>
-  <div id="histStats" style="display:flex;gap:10px;flex-wrap:wrap;"></div>
+
+  <!-- FILTROS -->
+  <div class="hist-filtros">
+    <div class="hist-filtro-group">
+      <label>Estado</label>
+      <select id="filtroEstado" onchange="renderHistorial()">
+        <option value="">Todos</option>
+        <option value="completado">Completado</option>
+        <option value="pendiente">Pendiente</option>
+        <option value="en-camino">En camino</option>
+        <option value="en-origen">En origen</option>
+        <option value="en-destino">En destino</option>
+      </select>
+    </div>
+    <div class="hist-filtro-group">
+      <label>Prestador</label>
+      <input type="text" id="filtroPrestador" placeholder="Nombre..." oninput="renderHistorial()">
+    </div>
+    <div class="hist-filtro-group">
+      <label>Cliente</label>
+      <input type="text" id="filtroCliente" placeholder="Nombre..." oninput="renderHistorial()">
+    </div>
+    <div class="hist-filtro-group">
+      <label>Desde</label>
+      <input type="date" id="filtroDesde" onchange="renderHistorial()">
+    </div>
+    <div class="hist-filtro-group">
+      <label>Hasta</label>
+      <input type="date" id="filtroHasta" onchange="renderHistorial()">
+    </div>
+    <div class="hist-filtro-group">
+      <label>Cobro</label>
+      <select id="filtroCobro" onchange="renderHistorial()">
+        <option value="">Todos</option>
+        <option value="efectivo">Efectivo</option>
+        <option value="transferencia">Transferencia</option>
+      </select>
+    </div>
+    <button class="hist-filtro-reset" onclick="resetFiltros()">✕ Limpiar filtros</button>
+  </div>
+
+  <div id="histStats" style="display:flex;gap:10px;flex-wrap:wrap;margin-bottom:8px;"></div>
+  <div id="histResultCount" style="font-size:11px;color:var(--muted);margin-bottom:12px;"></div>
   <div id="histLista"></div>
 </div>
 </div>
 
+<!-- LIQUIDACIONES -->
+<div class="page" id="pageLiquidaciones">
+<div class="hist-wrap">
+  <div class="hist-top">
+    <h2>Liquidaciones por prestador</h2>
+    <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;">
+      <label style="font-size:11px;color:var(--muted);">Desde</label>
+      <input type="date" id="liqDesde" onchange="renderLiquidaciones()" style="font-size:12px;padding:6px 10px;background:var(--surface2);border:1px solid var(--border);color:var(--text);border-radius:5px;outline:none;">
+      <label style="font-size:11px;color:var(--muted);">Hasta</label>
+      <input type="date" id="liqHasta" onchange="renderLiquidaciones()" style="font-size:12px;padding:6px 10px;background:var(--surface2);border:1px solid var(--border);color:var(--text);border-radius:5px;outline:none;">
+      <button class="hist-btn-export" onclick="exportarLiquidacionCSV()">
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+        Exportar CSV
+      </button>
+    </div>
+  </div>
+  <div id="liqResumen" style="display:flex;gap:10px;flex-wrap:wrap;margin-bottom:16px;"></div>
+  <div id="liqLista"></div>
+  <div id="liqPasadas"></div>
+</div>
+</div>
+
 </div><!-- /modoAvex -->
+
+<!-- MODAL FOTO -->
+<div class="foto-modal" id="fotoModal" onclick="cerrarFotoModal()">
+  <button class="foto-modal-close" onclick="cerrarFotoModal()">✕</button>
+  <img id="fotoModalImg" src="" alt="Foto del viaje">
+</div>
 
 <!-- MODAL PRESUPUESTO -->
 <div id="modalOverlay">
@@ -685,6 +851,25 @@ function showPage(id, tab) {
   document.getElementById(id).classList.add('active');
   tab.classList.add('active');
   if (id === 'pageHistorial') renderHistorial();
+  if (id === 'pageLiquidaciones') renderLiquidaciones();
+}
+
+// ── DIRECCIÓN ESTRUCTURADA ─────────────────────────────────────
+function actualizarDireccion(tipo) {
+  const calle    = document.getElementById(`${tipo}Calle`).value.trim();
+  const altura   = document.getElementById(`${tipo}Altura`).value.trim();
+  const localidad= document.getElementById(`${tipo}Localidad`).value.trim();
+  const direccion= [calle, altura, localidad].filter(Boolean).join(' ');
+  const input = document.getElementById(`${tipo}Input`);
+  input.value = direccion;
+  delete input.dataset.lat;
+  delete input.dataset.lon;
+  const preview = document.getElementById('dirPreview');
+  if (preview) {
+    const o = [document.getElementById('origenCalle').value.trim(), document.getElementById('origenAltura').value.trim(), document.getElementById('origenLocalidad').value.trim()].filter(Boolean).join(' ');
+    const d = [document.getElementById('destinoCalle').value.trim(), document.getElementById('destinoAltura').value.trim(), document.getElementById('destinoLocalidad').value.trim()].filter(Boolean).join(' ');
+    preview.textContent = o && d ? `📍 ${o} → ${d}` : o ? `📍 Origen: ${o}` : '';
+  }
 }
 
 // ── TEMA ──────────────────────────────────────────────────────
@@ -739,7 +924,7 @@ function renderTabla(activeIdx) {
     const active = i === activeIdx;
     return `<div class="tabla-row${active?' active':''}" id="row${i}">
       <span>${t.label}</span>
-      <span class="price">${fmt(total)}${iva>0?'<span style="font-size:9px;color:#A78BFA;margin-left:4px;">+IVA</span>':''}</span>
+      <span class="price">${fmt(total)}${iva>0?'<span style="font-size:9px;color:#A78BFA;margin-left:4px;">IVA inc.</span>':''}</span>
       <span class="price" style="color:${active?'var(--blue)':'var(--muted)'}">${fmt(avex)}</span>
       <span><div class="chip${t.tipo==='Base'?' base':''}${active?' active-chip':''}">${t.tipo}</div></span>
     </div>`;
@@ -828,11 +1013,13 @@ async function geocode(q){
 
 // ── CALCULAR ──────────────────────────────────────────────────
 async function calcularRuta(){
+  actualizarDireccion('origen');
+  actualizarDireccion('destino');
   const oIn=document.getElementById('origenInput');
   const dIn=document.getElementById('destinoInput');
   const btn=document.getElementById('btnCalc');
   const status=document.getElementById('status');
-  if(!oIn.value.trim()||!dIn.value.trim()){alert('Completá origen y destino.');return;}
+  if(!oIn.value.trim()||!dIn.value.trim()){alert('Completá calle, altura y localidad para origen y destino.');return;}
   btn.disabled=true;btn.textContent='Calculando...';
   status.textContent='🔍 Buscando ubicaciones...';status.classList.add('visible');
   try{
@@ -898,9 +1085,41 @@ async function calcularRuta(){
     btn.disabled=false;btn.textContent='Calcular tarifa y revenue →';
   }
 }
-document.getElementById('destinoInput').addEventListener('keydown',e=>{if(e.key==='Enter')calcularRuta();});
+document.getElementById('destinoLocalidad').addEventListener('keydown',e=>{if(e.key==='Enter')calcularRuta();});
 
-// ── CONFIRMAR VIAJE ───────────────────────────────────────────
+// ── PRESTADORES ───────────────────────────────────────────────
+const PRESTADORES = {
+  facundo: { nombre: 'Facundo Ocampos', tel: '+54 9 11 3414-7841', vehiculo: 'Mercedes Benz Vito', patente: 'AE324GK' },
+};
+
+function seleccionarPrestador(sel) {
+  const val = sel.value;
+  const manualRow = document.getElementById('prestadorManualRow');
+  if (val === 'manual') {
+    manualRow.style.display = 'grid';
+    document.getElementById('prestadorNombreInput').value = '';
+    document.getElementById('prestadorNombreHidden').value = '';
+    document.getElementById('prestadorTelInput').value = '';
+    document.getElementById('prestadorVehiculoInput').value = '';
+    document.getElementById('prestadorPatenteInput').value = '';
+  } else if (val && PRESTADORES[val]) {
+    manualRow.style.display = 'none';
+    const p = PRESTADORES[val];
+    document.getElementById('prestadorNombreHidden').value = p.nombre;
+    document.getElementById('prestadorTelInput').value = p.tel;
+    document.getElementById('prestadorVehiculoInput').value = p.vehiculo;
+    document.getElementById('prestadorPatenteInput').value = p.patente;
+  } else {
+    manualRow.style.display = 'none';
+    document.getElementById('prestadorNombreHidden').value = '';
+  }
+}
+
+function getPrestadorNombre() {
+  const sel = document.getElementById('prestadorSelect').value;
+  if (sel === 'manual') return document.getElementById('prestadorNombreInput').value || '—';
+  return document.getElementById('prestadorNombreHidden').value || '—';
+}
 let viajeActivoId=null, monitorInterval=null;
 
 async function confirmarViaje(){
@@ -924,7 +1143,7 @@ async function confirmarViaje(){
     clienteTel:    document.getElementById('telefonoInput').value||'—',
     vehiculoCliente:document.getElementById('vehiculoInput').value||'—',
     patenteCliente: document.getElementById('patenteInput').value||'—',
-    prestadorNombre:document.getElementById('prestadorNombreInput').value||'—',
+    prestadorNombre:getPrestadorNombre(),
     prestadorTel:   document.getElementById('prestadorTelInput').value||'—',
     prestadorVehiculo:document.getElementById('prestadorVehiculoInput').value||'—',
     prestadorPatente:document.getElementById('prestadorPatenteInput').value||'—',
@@ -1009,7 +1228,7 @@ function copiarLink(){
 
 function compartirWA(){
   if(!window._linkPrestador)return;
-  const nombre=document.getElementById('prestadorNombreInput').value.split(' ')[0];
+  const nombre=getPrestadorNombre().split(' ')[0];
   const origen=document.getElementById('origenInput').value;
   const destino=document.getElementById('destinoInput').value;
   const cliente=document.getElementById('clienteInput').value;
@@ -1040,28 +1259,64 @@ function actualizarContadorHistorial(){
 }
 
 function renderHistorial(){
-  const hist=getHistorial();
-  const lista=document.getElementById('histLista');
-  const statsEl=document.getElementById('histStats');
+  const todoHist = getHistorial();
 
-  if(hist.length===0){
+  // Leer filtros
+  const fEstado    = document.getElementById('filtroEstado')?.value    || '';
+  const fPrestador = (document.getElementById('filtroPrestador')?.value || '').toLowerCase().trim();
+  const fCliente   = (document.getElementById('filtroCliente')?.value   || '').toLowerCase().trim();
+  const fDesde     = document.getElementById('filtroDesde')?.value     || '';
+  const fHasta     = document.getElementById('filtroHasta')?.value     || '';
+  const fCobro     = document.getElementById('filtroCobro')?.value     || '';
+
+  const hist = todoHist.filter(v => {
+    if (fEstado    && v.estado !== fEstado) return false;
+    if (fPrestador && !(v.prestadorNombre||'').toLowerCase().includes(fPrestador)) return false;
+    if (fCliente   && !(v.cliente||'').toLowerCase().includes(fCliente)) return false;
+    if (fCobro     && v.formaCobro !== fCobro) return false;
+    if (fDesde) {
+      const d = new Date(v.createdAt); const desde = new Date(fDesde);
+      if (d < desde) return false;
+    }
+    if (fHasta) {
+      const d = new Date(v.createdAt); const hasta = new Date(fHasta);
+      hasta.setHours(23,59,59);
+      if (d > hasta) return false;
+    }
+    return true;
+  });
+
+  const lista   = document.getElementById('histLista');
+  const statsEl = document.getElementById('histStats');
+  const countEl = document.getElementById('histResultCount');
+
+  // Contador de resultados
+  if(countEl) countEl.textContent = hist.length !== todoHist.length
+    ? `Mostrando ${hist.length} de ${todoHist.length} viajes`
+    : `${todoHist.length} viaje${todoHist.length!==1?'s':''}`;
+
+  if(todoHist.length===0){
     statsEl.innerHTML='';
     lista.innerHTML=`<div class="hist-empty"><div class="hist-empty-icon">📋</div><h3 style="color:var(--text);font-size:16px;">Sin viajes aún</h3><p>Los viajes confirmados aparecerán acá automáticamente.</p></div>`;
     return;
   }
 
-  // Stats
-  const completados=hist.filter(v=>v.estado==='completado');
-  const totalAvex=completados.reduce((a,v)=>a+(v.montoAvex||0),0);
-  const totalPrest=completados.reduce((a,v)=>a+(v.montoPrestador||0),0);
+  // Stats siempre sobre todos (no filtrados)
+  const completados = todoHist.filter(v=>v.estado==='completado');
+  const totalAvex   = completados.reduce((a,v)=>a+(v.montoAvex||0),0);
+  const totalPrest  = completados.reduce((a,v)=>a+(v.montoPrestador||0),0);
   statsEl.innerHTML=`
-    <div class="hist-stat"><div class="hist-stat-label">Total viajes</div><div class="hist-stat-value">${hist.length}</div></div>
+    <div class="hist-stat"><div class="hist-stat-label">Total viajes</div><div class="hist-stat-value">${todoHist.length}</div></div>
     <div class="hist-stat"><div class="hist-stat-label">Completados</div><div class="hist-stat-value green">${completados.length}</div></div>
     <div class="hist-stat"><div class="hist-stat-label">Revenue AVEX</div><div class="hist-stat-value blue">${fmt(totalAvex)}</div></div>
     <div class="hist-stat"><div class="hist-stat-label">Pagado prestadores</div><div class="hist-stat-value">${fmt(totalPrest)}</div></div>
   `;
 
-  // Lista
+  if(hist.length===0){
+    lista.innerHTML=`<div class="hist-empty"><div class="hist-empty-icon">🔍</div><h3 style="color:var(--text);font-size:15px;">Sin resultados</h3><p>Probá con otros filtros.</p></div>`;
+    return;
+  }
+
   lista.innerHTML=hist.map(v=>{
     const fecha=v.createdAt?new Date(v.createdAt).toLocaleDateString('es-AR',{day:'2-digit',month:'2-digit',year:'2-digit',hour:'2-digit',minute:'2-digit'}):'—';
     const dur=v.timestamps?.completado&&v.timestamps?.['en-camino']
@@ -1069,7 +1324,7 @@ function renderHistorial(){
     return `
     <div class="hist-viaje" id="hv-${v.id}">
       <div class="hist-viaje-header" onclick="toggleHistViaje('${v.id}')">
-        <div>
+        <div style="flex:1;">
           <div class="hist-viaje-id">${v.id} · ${fecha}</div>
           <div class="hist-viaje-ruta">${v.origen.split(',')[0]} <span>→</span> ${v.destino.split(',')[0]}</div>
         </div>
@@ -1093,9 +1348,71 @@ function renderHistorial(){
           <button class="hist-btn" onclick="reenviarLink('${v.id}')">📤 Reenviar link</button>
           <button class="hist-btn danger" onclick="eliminarViaje('${v.id}')">🗑 Eliminar</button>
         </div>
+        ${(v.fotoOrigen||v.fotoDestino)?`
+        <div style="margin-top:10px;">
+          <div class="hist-cell-label" style="margin-bottom:6px;">📸 Fotos del viaje</div>
+          <div class="hist-fotos">
+            ${v.fotoOrigen?`<img class="hist-foto-thumb" src="${v.fotoOrigen}" alt="Origen" title="Foto al llegar al origen" onclick="verFoto('${v.fotoOrigen}')">` : ''}
+            ${v.fotoDestino?`<img class="hist-foto-thumb" src="${v.fotoDestino}" alt="Destino" title="Foto al llegar al destino" onclick="verFoto('${v.fotoDestino}')">` : ''}
+          </div>
+        </div>`:''}
       </div>
     </div>`;
   }).join('');
+}
+
+function resetFiltros(){
+  ['filtroEstado','filtroPrestador','filtroCliente','filtroDesde','filtroHasta','filtroCobro'].forEach(id=>{
+    const el=document.getElementById(id);
+    if(el)el.value='';
+  });
+  renderHistorial();
+}
+
+function exportarCSV(){
+  const fEstado    = document.getElementById('filtroEstado')?.value    || '';
+  const fPrestador = (document.getElementById('filtroPrestador')?.value || '').toLowerCase().trim();
+  const fCliente   = (document.getElementById('filtroCliente')?.value   || '').toLowerCase().trim();
+  const fDesde     = document.getElementById('filtroDesde')?.value     || '';
+  const fHasta     = document.getElementById('filtroHasta')?.value     || '';
+  const fCobro     = document.getElementById('filtroCobro')?.value     || '';
+
+  let hist = getHistorial().filter(v => {
+    if (fEstado    && v.estado !== fEstado) return false;
+    if (fPrestador && !(v.prestadorNombre||'').toLowerCase().includes(fPrestador)) return false;
+    if (fCliente   && !(v.cliente||'').toLowerCase().includes(fCliente)) return false;
+    if (fCobro     && v.formaCobro !== fCobro) return false;
+    if (fDesde) { const d=new Date(v.createdAt); if(d<new Date(fDesde)) return false; }
+    if (fHasta) { const d=new Date(v.createdAt); const h=new Date(fHasta); h.setHours(23,59,59); if(d>h) return false; }
+    return true;
+  });
+
+  if(!hist.length){ alert('No hay viajes para exportar con los filtros actuales.'); return; }
+
+  const cols = ['ID','Fecha','Estado','Origen','Destino','KM','Tiempo','Cliente','Tel Cliente','Vehículo','Patente','Prestador','Tel Prestador','Veh Prestador','Pat Prestador','Total','AVEX 40%','Prestador 60%','Factura','Zona','Forma Cobro','Duración (min)'];
+
+  const rows = hist.map(v => {
+    const fecha = v.createdAt ? new Date(v.createdAt).toLocaleDateString('es-AR') : '';
+    const dur = v.timestamps?.completado && v.timestamps?.['en-camino']
+      ? Math.round((v.timestamps.completado - v.timestamps['en-camino'])/60000) : '';
+    return [
+      v.id, fecha, v.estado,
+      v.origen, v.destino, v.km, v.tiempo,
+      v.cliente, v.clienteTel, v.vehiculoCliente, v.patenteCliente,
+      v.prestadorNombre, v.prestadorTel, v.prestadorVehiculo, v.prestadorPatente,
+      v.total, v.montoAvex, v.montoPrestador,
+      v.factura, v.zona, v.formaCobro||'', dur
+    ].map(c => `"${String(c||'').replace(/"/g,'""')}"`).join(',');
+  });
+
+  const csv = [cols.join(','), ...rows].join('\n');
+  const blob = new Blob(['\uFEFF'+csv], {type:'text/csv;charset=utf-8;'});
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = `avex-historial-${new Date().toISOString().slice(0,10)}.csv`;
+  a.click();
+  URL.revokeObjectURL(url);
 }
 
 function toggleHistViaje(id){
@@ -1148,7 +1465,7 @@ function abrirPresupuesto(){
   const tel=document.getElementById('telefonoInput').value.trim()||'—';
   const vehiculo=document.getElementById('vehiculoInput').value.trim()||'—';
   const patente=document.getElementById('patenteInput').value.trim().toUpperCase()||'—';
-  const prestNombre=document.getElementById('prestadorNombreInput').value.trim()||'—';
+  const prestNombre=getPrestadorNombre();
   const prestTel=document.getElementById('prestadorTelInput').value.trim()||'—';
   const prestVehiculo=document.getElementById('prestadorVehiculoInput').value.trim()||'—';
   const prestPatente=document.getElementById('prestadorPatenteInput').value.trim().toUpperCase()||'—';
@@ -1249,10 +1566,10 @@ function pRender(){
       <div class="p-cobro-sub">Tu parte: ${fmt(v.montoPrestador)} ARS</div>
       <div class="p-cobro-opts">
         <div class="p-cobro-opt ${pCobroSel==='efectivo'?'selected':''}" onclick="pSelCobro('efectivo')">
-          <div class="p-cobro-opt-icon">💵</div><div class="p-cobro-opt-label">Cobré en efectivo</div><div class="p-cobro-opt-desc">El cliente me pagó directo</div>
+          <div class="p-cobro-opt-icon">💵</div><div class="p-cobro-opt-label">Cobré en efectivo</div><div class="p-cobro-opt-desc">El cliente me pagó cash a mí</div>
         </div>
         <div class="p-cobro-opt ${pCobroSel==='transferencia'?'selected':''}" onclick="pSelCobro('transferencia')">
-          <div class="p-cobro-opt-icon">🏦</div><div class="p-cobro-opt-label">Transferí a AVEX</div><div class="p-cobro-opt-desc">Mandé mi parte a AVEX</div>
+          <div class="p-cobro-opt-icon">🏦</div><div class="p-cobro-opt-label">El cliente transfirió a AVEX</div><div class="p-cobro-opt-desc">El pago fue directo a AVEX</div>
         </div>
       </div>
       <button class="p-btn-confirmar" onclick="pConfirmarCobro()" style="${pCobroSel?'display:block':'display:none'}">Confirmar y cerrar viaje ✓</button>
@@ -1273,6 +1590,49 @@ function pRender(){
       <div class="p-res-row"><span class="p-res-l">Cobro</span><span class="p-res-v">${v.formaCobro==='efectivo'?'💵 Efectivo':'🏦 Transferencia'}</span></div>
     </div>`;
   }
+  // Navegación al origen
+  const navOrigen = (v.estado === 'pendiente' || v.estado === 'en-camino') ? `
+    <div class="p-foto-card" style="background:var(--surface2);">
+      <div class="p-foto-title">🧭 Navegar al origen</div>
+      <div class="p-foto-sub">${v.origen}</div>
+      <div class="p-nav-btns">
+        <button class="p-btn-nav gmaps" onclick="abrirNavegacion('gmaps','${encodeURIComponent(v.origen)}')">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z"/></svg>
+          Google Maps
+        </button>
+        <button class="p-btn-nav waze" onclick="abrirNavegacion('waze','${encodeURIComponent(v.origen)}')">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2a10 10 0 1 0 10 10A10 10 0 0 0 12 2zm0 18a8 8 0 1 1 8-8 8 8 0 0 1-8 8z"/></svg>
+          Waze
+        </button>
+      </div>
+    </div>` : '';
+
+  // Fotos
+  const fotoOrigenTaken = !!pViaje.fotoOrigen;
+  const fotoDestinoTaken = !!pViaje.fotoDestino;
+  const mostrarFotos = ['en-origen','en-destino','cobro','completado'].includes(v.estado);
+  const fotosHtml = mostrarFotos ? `
+    <div class="p-foto-card">
+      <div class="p-foto-title">📸 Evidencia fotográfica</div>
+      <div class="p-foto-sub">Sacá una foto al vehículo en cada punto</div>
+      <div class="p-foto-btns">
+        <div class="p-foto-slot ${fotoOrigenTaken?'taken':''}" onclick="document.getElementById('inputFotoOrigen').click()">
+          <input type="file" id="inputFotoOrigen" accept="image/*" capture="environment" style="display:none" onchange="subirFoto(this,'origen')">
+          <div class="p-foto-slot-icon">${fotoOrigenTaken?'✅':'📷'}</div>
+          <div class="p-foto-slot-label">Al llegar al origen</div>
+          <div class="p-foto-slot-status">${fotoOrigenTaken?'✓ Foto tomada':'Tocar para sacar foto'}</div>
+          ${fotoOrigenTaken?`<img class="p-foto-preview visible" src="${pViaje.fotoOrigen}" alt="Foto origen">` : ''}
+        </div>
+        <div class="p-foto-slot ${fotoDestinoTaken?'taken':''}" onclick="document.getElementById('inputFotoDestino').click()">
+          <input type="file" id="inputFotoDestino" accept="image/*" capture="environment" style="display:none" onchange="subirFoto(this,'destino')">
+          <div class="p-foto-slot-icon">${fotoDestinoTaken?'✅':'📷'}</div>
+          <div class="p-foto-slot-label">Al llegar al destino</div>
+          <div class="p-foto-slot-status">${fotoDestinoTaken?'✓ Foto tomada':'Tocar para sacar foto'}</div>
+          ${fotoDestinoTaken?`<img class="p-foto-preview visible" src="${pViaje.fotoDestino}" alt="Foto destino">` : ''}
+        </div>
+      </div>
+    </div>` : '';
+
   document.getElementById('pContent').innerHTML=`
     <div class="p-card">
       <div class="p-card-title">Datos del viaje</div>
@@ -1282,12 +1642,14 @@ function pRender(){
       <div class="p-row"><span class="p-row-icon">👤</span><div><div class="p-row-label">Cliente</div><div class="p-row-value">${v.cliente||'—'}</div><div class="p-row-sub">${v.clienteTel||''}</div></div></div>
       <div class="p-row"><span class="p-row-icon">🚘</span><div><div class="p-row-label">Vehículo a asistir</div><div class="p-row-value">${v.vehiculoCliente||'—'} · ${v.patenteCliente||'—'}</div></div></div>
     </div>
+    ${navOrigen}
     <div class="p-card" style="overflow:hidden;"><div id="p-map"></div></div>
     <div class="p-total">
       <div><div class="p-total-label">Total del servicio</div><div><span class="p-total-price">${fmt(v.total)}</span><span class="p-total-cur">ARS</span></div></div>
       <div class="p-total-right"><div>Tu parte</div><div class="p-total-parte">${fmt(v.montoPrestador)}</div><div>Factura ${v.factura}</div></div>
     </div>
     <div class="p-card"><div class="p-card-title">Estado del viaje</div><div class="p-tl">${tlHtml}</div></div>
+    ${fotosHtml}
     ${cobroHtml}${doneHtml}
   `;
   if(pMapObj){pMapObj.remove();pMapObj=null;}
@@ -1328,6 +1690,50 @@ function pGuardar(){
   try{localStorage.setItem(`viaje:${pViaje.id}`,JSON.stringify(pViaje));}catch(e){}
 }
 
+function abrirNavegacion(app, destEnc){
+  const dest = decodeURIComponent(destEnc);
+  if(app === 'gmaps'){
+    window.open(`https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(dest)}&travelmode=driving`);
+  } else {
+    window.open(`https://waze.com/ul?q=${encodeURIComponent(dest)}&navigate=yes`);
+  }
+}
+
+function subirFoto(input, tipo){
+  const file = input.files[0];
+  if(!file) return;
+  // Comprimir a max 800px y calidad 70% para no explotar el localStorage
+  const reader = new FileReader();
+  reader.onload = e => {
+    const img = new Image();
+    img.onload = () => {
+      const canvas = document.createElement('canvas');
+      const MAX = 800;
+      let w = img.width, h = img.height;
+      if(w > MAX){ h = Math.round(h * MAX / w); w = MAX; }
+      if(h > MAX){ w = Math.round(w * MAX / h); h = MAX; }
+      canvas.width = w; canvas.height = h;
+      canvas.getContext('2d').drawImage(img, 0, 0, w, h);
+      const b64 = canvas.toDataURL('image/jpeg', 0.7);
+      if(tipo === 'origen') pViaje.fotoOrigen = b64;
+      else pViaje.fotoDestino = b64;
+      pGuardar();
+      guardarEnHistorial(pViaje);
+      pRender();
+    };
+    img.src = e.target.result;
+  };
+  reader.readAsDataURL(file);
+}
+
+function verFoto(src){
+  document.getElementById('fotoModalImg').src = src;
+  document.getElementById('fotoModal').classList.add('open');
+}
+function cerrarFotoModal(){
+  document.getElementById('fotoModal').classList.remove('open');
+}
+
 function initModoPrestador(){
   const params=new URLSearchParams(window.location.search);
   const dataB64=params.get('data');
@@ -1340,6 +1746,7 @@ function initModoPrestador(){
     }catch(e){}
     document.getElementById('modoPrestador').classList.add('active');
     document.getElementById('modoAvex').style.display='none';
+    document.getElementById('loginScreen').classList.add('hidden');
     document.title='AVEX · Viaje del Prestador';
     pRender();
     setInterval(()=>{
@@ -1352,15 +1759,266 @@ function initModoPrestador(){
     document.getElementById('pContent').innerHTML=`<p style="color:var(--muted);text-align:center;padding:40px 20px;">⚠️ Link inválido.</p>`;
     document.getElementById('modoPrestador').classList.add('active');
     document.getElementById('modoAvex').style.display='none';
+    document.getElementById('loginScreen').classList.add('hidden');
     return true;
   }
 }
 
+// ── LIQUIDACIONES ─────────────────────────────────────────────
+function renderLiquidaciones() {
+  const desde = document.getElementById('liqDesde')?.value || '';
+  const hasta = document.getElementById('liqHasta')?.value || '';
+  const viajes = getHistorial().filter(v => {
+    if (v.estado !== 'completado') return false;
+    if (v.liquidado) return false; // excluir ya liquidados
+    if (desde) { if (new Date(v.createdAt) < new Date(desde)) return false; }
+    if (hasta) { const h = new Date(hasta); h.setHours(23,59,59); if (new Date(v.createdAt) > h) return false; }
+    return true;
+  });
+  const lista = document.getElementById('liqLista');
+  const resEl = document.getElementById('liqResumen');
+  if (!viajes.length) {
+    resEl.innerHTML = '';
+    lista.innerHTML = `<div class="liq-empty"><div class="liq-empty-icon">✅</div><h3 style="color:var(--text);font-size:16px;margin-bottom:6px;">Todo liquidado</h3><p style="font-size:13px;">No hay viajes pendientes de liquidar.</p></div>`;
+    renderLiquidacionesPasadas();
+    return;
+  }
+  // Agrupar por prestador
+  const porPrestador = {};
+  viajes.forEach(v => {
+    const n = v.prestadorNombre || 'Sin nombre';
+    if (!porPrestador[n]) porPrestador[n] = [];
+    porPrestador[n].push(v);
+  });
+  // Stats globales
+  let gCobrar = 0, gPagar = 0;
+  viajes.forEach(v => {
+    if (v.formaCobro === 'efectivo') gCobrar += (v.montoAvex||0);
+    else gPagar += (v.montoPrestador||0);
+  });
+  resEl.innerHTML = `
+    <div class="hist-stat"><div class="hist-stat-label">Prestadores</div><div class="hist-stat-value">${Object.keys(porPrestador).length}</div></div>
+    <div class="hist-stat"><div class="hist-stat-label">Viajes completados</div><div class="hist-stat-value green">${viajes.length}</div></div>
+    <div class="hist-stat"><div class="hist-stat-label">AVEX debe cobrar</div><div class="hist-stat-value" style="color:#EF4444;">${fmt(gCobrar)}</div></div>
+    <div class="hist-stat"><div class="hist-stat-label">AVEX debe pagar</div><div class="hist-stat-value" style="color:var(--accent);">${fmt(gPagar)}</div></div>
+  `;
+  lista.innerHTML = Object.entries(porPrestador).map(([nombre, vjs]) => {
+    let cobrar = 0, pagar = 0, totalFact = 0;
+    vjs.forEach(v => {
+      totalFact += (v.total||0);
+      if (v.formaCobro === 'efectivo') cobrar += (v.montoAvex||0);
+      else pagar += (v.montoPrestador||0);
+    });
+    const neto = pagar - cobrar;
+    const saldoLabel = neto > 0 ? 'AVEX paga al prestador' : neto < 0 ? 'Prestador paga a AVEX' : 'Saldo neutro';
+    const saldoClass = neto > 0 ? 'pagar' : neto < 0 ? 'cobrar' : 'neutro';
+    const saldoMonto = fmt(Math.abs(neto));
+    const id = 'liq_' + nombre.replace(/\W/g,'_');
+    const inicial = nombre.split(' ').map(p=>p[0]).join('').slice(0,2).toUpperCase();
+    const filas = vjs.map(v => {
+      const fecha = v.createdAt ? new Date(v.createdAt).toLocaleDateString('es-AR',{day:'2-digit',month:'2-digit',year:'2-digit'}) : '—';
+      const esCash = v.formaCobro === 'efectivo';
+      return `<div class="liq-row">
+        <span>${fecha}</span>
+        <span style="font-size:11px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${(v.origen||'').split(',')[0]} → ${(v.destino||'').split(',')[0]}</span>
+        <span style="font-weight:600;">${fmt(v.total)}</span>
+        <span><span class="liq-cobro-pill ${v.formaCobro||''}">${esCash?'💵 Efectivo':'🏦 Transferencia'}</span></span>
+        <span style="font-weight:600;color:${esCash?'#EF4444':'var(--accent)'};">${fmt(esCash?v.montoAvex:v.montoPrestador)}</span>
+        <span><span class="liq-accion-pill ${esCash?'cobrar':'pagar'}">${esCash?'Cobrar a prestador':'Pagar al prestador'}</span></span>
+      </div>`;
+    }).join('');
+    return `<div class="liq-card" id="${id}">
+      <div class="liq-header" onclick="document.getElementById('${id}').classList.toggle('expanded')">
+        <div class="liq-avatar">${inicial}</div>
+        <div class="liq-info">
+          <div class="liq-nombre">${nombre}</div>
+          <div class="liq-meta">${vjs.length} viaje${vjs.length!==1?'s':''} · Total facturado: ${fmt(totalFact)}</div>
+        </div>
+        <div class="liq-saldo">
+          <div class="liq-saldo-label">${saldoLabel}</div>
+          <div class="liq-saldo-monto ${saldoClass}">${saldoMonto}</div>
+        </div>
+      </div>
+      <div class="liq-body">
+        <div class="liq-thead"><span>Fecha</span><span>Recorrido</span><span>Total</span><span>Forma cobro</span><span>A liquidar</span><span>Acción</span></div>
+        ${filas}
+        <div class="liq-resumen">
+          <div class="liq-res-item"><div class="liq-res-label">Total facturado</div><div class="liq-res-value">${fmt(totalFact)}</div></div>
+          <div class="liq-res-item"><div class="liq-res-label">AVEX debe cobrar</div><div class="liq-res-value" style="color:#EF4444;">${fmt(cobrar)}</div></div>
+          <div class="liq-res-item"><div class="liq-res-label">AVEX debe pagar</div><div class="liq-res-value" style="color:var(--accent);">${fmt(pagar)}</div></div>
+          <div class="liq-res-item"><div class="liq-res-label">Saldo neto</div><div class="liq-res-value ${saldoClass}">${saldoMonto}</div></div>
+        </div>
+        <div style="display:flex;gap:8px;margin-top:12px;flex-wrap:wrap;">
+          <button class="liq-print-btn" onclick="window.print()">🖨️ Imprimir liquidación de ${nombre.split(' ')[0]}</button>
+          <button class="liq-print-btn" style="border-color:var(--accent);color:var(--accent);"
+            data-liq-nombre="${nombre.replace(/"/g,'&quot;')}"
+            data-liq-ids="${vjs.map(v=>v.id).join(',')}"
+            data-liq-monto="${Math.abs(neto)}"
+            data-liq-tipo="${saldoClass}"
+            onclick="confirmarLiquidacionBtn(this)">
+            ✅ Marcar como liquidado · ${saldoMonto}
+          </button>
+        </div>
+      </div>
+    </div>`;
+  }).join('');
+  renderLiquidacionesPasadas();
+}
+
+function exportarLiquidacionCSV() {
+  const desde = document.getElementById('liqDesde')?.value || '';
+  const hasta = document.getElementById('liqHasta')?.value || '';
+  const viajes = getHistorial().filter(v => {
+    if (v.estado !== 'completado') return false;
+    if (v.liquidado) return false;
+    if (desde) { if (new Date(v.createdAt) < new Date(desde)) return false; }
+    if (hasta) { const h = new Date(hasta); h.setHours(23,59,59); if (new Date(v.createdAt) > h) return false; }
+    return true;
+  });
+  if (!viajes.length) { alert('No hay viajes completados para exportar.'); return; }
+  const cols = ['Prestador','Fecha','Origen','Destino','Total','Forma cobro','AVEX 40%','Prestador 60%','Acción','Monto a liquidar'];
+  const rows = viajes.map(v => {
+    const esCash = v.formaCobro === 'efectivo';
+    return [
+      v.prestadorNombre,
+      v.createdAt ? new Date(v.createdAt).toLocaleDateString('es-AR') : '',
+      v.origen, v.destino, v.total, v.formaCobro,
+      v.montoAvex, v.montoPrestador,
+      esCash ? 'Cobrar a prestador' : 'Pagar al prestador',
+      esCash ? v.montoAvex : v.montoPrestador
+    ].map(c=>`"${String(c||'').replace(/"/g,'""')}"`).join(',');
+  });
+  const csv = [cols.join(','), ...rows].join('\n');
+  const blob = new Blob(['\uFEFF'+csv], {type:'text/csv;charset=utf-8;'});
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = `avex-liquidaciones-${new Date().toISOString().slice(0,10)}.csv`;
+  a.click();
+  URL.revokeObjectURL(url);
+}
+
+// ── LIQUIDACIONES PASADAS ─────────────────────────────────────
+function getLiquidacionesPasadas() {
+  try { return JSON.parse(localStorage.getItem('avex-liquidaciones') || '[]'); } catch(e) { return []; }
+}
+
+function confirmarLiquidacionBtn(btn) {
+  const nombre    = btn.dataset.liqNombre;
+  const viajeIds  = btn.dataset.liqIds.split(',').filter(Boolean);
+  const montoNeto = parseFloat(btn.dataset.liqMonto);
+  const tipo      = btn.dataset.liqTipo;
+  confirmarLiquidacion(nombre, viajeIds, montoNeto, tipo);
+}
+
+function confirmarLiquidacion(prestador, viajeIds, montoNeto, tipo) {
+  const accion = tipo === 'pagar' ? 'AVEX paga al prestador' : tipo === 'cobrar' ? 'Prestador paga a AVEX' : 'Saldo neutro';
+  if (!confirm(`¿Confirmar liquidación de ${prestador}?\n${accion}: ${fmt(montoNeto)}\n\nEsto marcará ${viajeIds.length} viaje${viajeIds.length!==1?'s':''} como liquidados y reiniciará el recuento.`)) return;
+
+  // Marcar viajes como liquidados en el historial
+  const hist = getHistorial();
+  const liqId = 'LQ' + Date.now().toString(36).toUpperCase();
+  const viajesLiquidados = [];
+  hist.forEach(v => {
+    if (viajeIds.includes(v.id)) {
+      v.liquidado = true;
+      v.liquidadoId = liqId;
+      v.liquidadoAt = Date.now();
+      viajesLiquidados.push(v);
+    }
+  });
+  localStorage.setItem('avex-historial', JSON.stringify(hist));
+
+  // Guardar el registro de la liquidación
+  const liquidaciones = getLiquidacionesPasadas();
+  liquidaciones.unshift({
+    id: liqId,
+    prestador,
+    fecha: Date.now(),
+    viajes: viajesLiquidados,
+    montoNeto,
+    tipo,
+    cantViajes: viajeIds.length,
+    totalFacturado: viajesLiquidados.reduce((a,v) => a + (v.total||0), 0),
+    cobrar: viajesLiquidados.filter(v=>v.formaCobro==='efectivo').reduce((a,v)=>a+(v.montoAvex||0),0),
+    pagar:  viajesLiquidados.filter(v=>v.formaCobro!=='efectivo').reduce((a,v)=>a+(v.montoPrestador||0),0),
+  });
+  localStorage.setItem('avex-liquidaciones', JSON.stringify(liquidaciones));
+
+  renderLiquidaciones();
+  renderLiquidacionesPasadas();
+}
+
+function renderLiquidacionesPasadas() {
+  const el = document.getElementById('liqPasadas');
+  if (!el) return;
+  const lqs = getLiquidacionesPasadas();
+  if (!lqs.length) { el.innerHTML = ''; return; }
+
+  el.innerHTML = `
+    <div style="margin-top:24px;">
+      <div style="font-size:11px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:var(--muted);margin-bottom:12px;display:flex;align-items:center;justify-content:space-between;">
+        <span>Liquidaciones cerradas (${lqs.length})</span>
+        <button onclick="borrarTodasLiquidaciones()" style="font-size:10px;background:none;border:none;color:var(--muted);cursor:pointer;padding:2px 8px;border-radius:4px;" onmouseover="this.style.color='#EF4444'" onmouseout="this.style.color='var(--muted)'">Borrar todo</button>
+      </div>
+      ${lqs.map((lq, idx) => {
+        const fecha = new Date(lq.fecha).toLocaleDateString('es-AR', {day:'2-digit',month:'2-digit',year:'numeric',hour:'2-digit',minute:'2-digit'});
+        const accion = lq.tipo === 'pagar' ? '✅ AVEX pagó al prestador' : lq.tipo === 'cobrar' ? '✅ Prestador pagó a AVEX' : '✅ Saldo neutro';
+        const cardId = `lqp_${idx}`;
+        // Detalle de viajes de esta liquidación
+        const detalleViajes = (lq.viajes || []).map(v => {
+          const fv = v.createdAt ? new Date(v.createdAt).toLocaleDateString('es-AR',{day:'2-digit',month:'2-digit',year:'2-digit'}) : '—';
+          const esCash = v.formaCobro === 'efectivo';
+          return `<div class="liq-row" style="grid-template-columns:80px 1fr 100px 120px 110px;">
+            <span>${fv}</span>
+            <span style="font-size:11px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${(v.origen||'').split(',')[0]} → ${(v.destino||'').split(',')[0]}</span>
+            <span style="font-weight:600;">${fmt(v.total)}</span>
+            <span><span class="liq-cobro-pill ${v.formaCobro||''}">${esCash?'💵 Efectivo':'🏦 Transf.'}</span></span>
+            <span style="font-weight:600;color:${esCash?'#EF4444':'var(--accent)'};">${fmt(esCash?v.montoAvex:v.montoPrestador)}</span>
+          </div>`;
+        }).join('');
+
+        return `<div class="liq-card" id="${cardId}">
+          <div class="liq-header" onclick="document.getElementById('${cardId}').classList.toggle('expanded')">
+            <div class="liq-avatar" style="background:var(--surface2);border-color:var(--border);color:var(--muted);">✅</div>
+            <div class="liq-info">
+              <div class="liq-nombre">${lq.prestador}</div>
+              <div class="liq-meta">${lq.cantViajes} viaje${lq.cantViajes!==1?'s':''} · ${fecha} · ID: ${lq.id}</div>
+            </div>
+            <div class="liq-saldo">
+              <div class="liq-saldo-label">${accion}</div>
+              <div class="liq-saldo-monto" style="color:var(--accent);">${fmt(lq.montoNeto)}</div>
+            </div>
+          </div>
+          <div class="liq-body">
+            <div style="display:flex;gap:16px;flex-wrap:wrap;margin-bottom:14px;">
+              <div><div class="liq-res-label">Total facturado</div><div class="liq-res-value">${fmt(lq.totalFacturado)}</div></div>
+              <div><div class="liq-res-label">AVEX cobró</div><div class="liq-res-value" style="color:#EF4444;">${fmt(lq.cobrar||0)}</div></div>
+              <div><div class="liq-res-label">AVEX pagó</div><div class="liq-res-value" style="color:var(--accent);">${fmt(lq.pagar||0)}</div></div>
+              <div><div class="liq-res-label">Saldo neto</div><div class="liq-res-value" style="color:var(--accent);">${fmt(lq.montoNeto)}</div></div>
+            </div>
+            ${lq.viajes?.length ? `
+              <div class="liq-thead" style="grid-template-columns:80px 1fr 100px 120px 110px;">
+                <span>Fecha</span><span>Recorrido</span><span>Total</span><span>Forma cobro</span><span>Liquidado</span>
+              </div>
+              ${detalleViajes}` : '<p style="font-size:12px;color:var(--muted);">Sin detalle de viajes.</p>'}
+          </div>
+        </div>`;
+      }).join('')}
+    </div>`;
+}
+
+function borrarTodasLiquidaciones() {
+  if (!confirm('¿Borrar todo el registro de liquidaciones cerradas? Esta acción no se puede deshacer.')) return;
+  localStorage.removeItem('avex-liquidaciones');
+  renderLiquidacionesPasadas();
+}
+
 // ── LOGIN ──────────────────────────────────────────────────────
-const CLAVE = 'motoraton3466'; // ← cambiá esto por tu clave
+const CLAVE = 'motoraton3466';
 
 function checkLogin() {
-  const val = document.getElementById('loginInput').value;
+  const val = document.getElementById('loginInput').value.trim();
   if (val === CLAVE) {
     localStorage.setItem('avex-auth', btoa(CLAVE));
     document.getElementById('loginScreen').classList.add('hidden');
@@ -1382,12 +2040,16 @@ function logout() {
 // ── INIT ──────────────────────────────────────────────────────
 const esPrestador = initModoPrestador();
 if (!esPrestador) {
-  // Verificar auth (el modo prestador no necesita clave)
-  const saved = localStorage.getItem('avex-auth');
-  if (!saved || atob(saved) !== CLAVE) {
+  try {
+    const saved = localStorage.getItem('avex-auth');
+    const ok = saved && atob(saved) === CLAVE;
+    if (!ok) {
+      document.getElementById('loginScreen').classList.remove('hidden');
+    } else {
+      document.getElementById('loginScreen').classList.add('hidden');
+    }
+  } catch(e) {
     document.getElementById('loginScreen').classList.remove('hidden');
-  } else {
-    document.getElementById('loginScreen').classList.add('hidden');
   }
   if(localStorage.getItem('avex-theme')==='light')toggleTheme();
   actualizarContadorHistorial();
