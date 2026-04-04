@@ -687,6 +687,10 @@ input::placeholder{color:#404040;}
         <div class="stat"><span class="stat-l">Tiempo estimado</span><span class="stat-v" id="rTiempo">—</span></div>
         <div class="stat"><span class="stat-l">Zona</span><span class="stat-v" id="rZona">—</span></div>
       </div>
+      <div style="padding:12px 16px 0;border-top:1px solid #1a1a1a;margin-top:4px;">
+        <div style="font-size:10px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:var(--muted);margin-bottom:8px;">Ajustar tramo manualmente</div>
+        <div id="tramoManualPills" style="display:flex;gap:6px;flex-wrap:wrap;"></div>
+      </div>
     </div>
     <div class="breakdown-card">
       <div class="breakdown-title">Desglose de revenue</div>
@@ -851,7 +855,10 @@ input::placeholder{color:#404040;}
 <div class="hist-wrap">
   <div class="hist-top">
     <h2>Tarifario</h2>
-    <div style="font-size:12px;color:var(--muted);">Los cambios se guardan automáticamente y se aplican en la calculadora.</div>
+    <div style="display:flex;align-items:center;gap:10px;">
+      <div style="font-size:12px;color:var(--muted);">Los cambios se guardan automáticamente y se aplican en la calculadora.</div>
+      <button onclick="resetearTarifario()" style="padding:6px 12px;border-radius:5px;border:1px solid var(--border);background:transparent;color:var(--muted);font-family:'Inter',sans-serif;font-size:11px;font-weight:600;cursor:pointer;white-space:nowrap;" onmouseover="this.style.borderColor='#EF4444';this.style.color='#EF4444'" onmouseout="this.style.borderColor='var(--border)';this.style.color='var(--muted)'">↺ Restaurar defaults</button>
+    </div>
   </div>
   <div class="card" style="margin-bottom:16px;">
     <div class="sec-tag" style="padding:14px 18px 0;">Tramos por distancia</div>
@@ -983,6 +990,7 @@ input::placeholder{color:#404040;}
 <script>
 // ── CONFIG (editable) ─────────────────────────────────────────
 const TARIFAS_DEFAULT = [
+  {max:5,        precio:50000,  label:'Hasta 5 km',   tipo:'Mínimo'   },
   {max:10,       precio:70000,  label:'Hasta 10 km',  tipo:'Entrada'  },
   {max:15,       precio:90000,  label:'Hasta 15 km',  tipo:'Base'     },
   {max:20,       precio:110000, label:'Hasta 20 km',  tipo:'Estándar' },
@@ -1003,6 +1011,8 @@ function cargarTarifario() {
       ...tr,
       max: (tr.max === null || tr.max === 'Infinity' || i === tarifas.length - 1) ? Infinity : Number(tr.max)
     }));
+    // Ordenar siempre de menor a mayor, Infinity al final
+    tarifas.sort((a,b) => { if(a.max===Infinity)return 1; if(b.max===Infinity)return -1; return a.max-b.max; });
     return { tarifas, movidas: m ? JSON.parse(m) : MOVIDA_DEFAULT };
   } catch(e) { return { tarifas: TARIFAS_DEFAULT, movidas: MOVIDA_DEFAULT }; }
 }
@@ -1016,6 +1026,29 @@ const M_ORDEN = ['pendiente','en-camino','en-origen','en-destino','cobro','compl
 
 let zonaActual = Object.keys(MOVIDA)[0] || 'caba';
 let facturaActual = 'A';
+let tramoOverride = null; // índice del tramo seleccionado manualmente
+
+function renderTramoManualPills(idxActivo) {
+  const container = document.getElementById('tramoManualPills');
+  if (!container) return;
+  container.innerHTML = TARIFAS.map((t, i) => {
+    const sel = i === idxActivo;
+    const label = t.max === Infinity ? '+30 km' : `≤${t.max} km`;
+    return `<div onclick="seleccionarTramoManual(${i})" style="
+      padding:5px 12px;border-radius:20px;font-size:11px;font-weight:700;cursor:pointer;
+      border:1px solid ${sel ? 'var(--accent)' : 'var(--border)'};
+      background:${sel ? 'var(--accent-dim)' : 'transparent'};
+      color:${sel ? 'var(--accent)' : 'var(--muted)'};
+      transition:all .15s;
+    ">${label} · ${t.tipo}</div>`;
+  }).join('');
+}
+
+function seleccionarTramoManual(idx) {
+  tramoOverride = idx;
+  const km = parseFloat(document.getElementById('rKm').textContent) || 0;
+  updateRevenue(km);
+}
 
 // ── HELPERS ───────────────────────────────────────────────────
 const fmt = n => '$' + Math.round(n).toLocaleString('es-AR');
@@ -1184,18 +1217,23 @@ renderTabla(-1);
 
 // ── REVENUE ───────────────────────────────────────────────────
 function updateRevenue(km) {
-  const t     = getTarifa(km);
-  const idx   = TARIFAS.indexOf(t);
+  // Usar tramo override si está seleccionado, sino el automático por km
+  const tAuto  = getTarifa(km);
+  const idxAuto = TARIFAS.indexOf(tAuto);
+  const idx    = tramoOverride !== null ? tramoOverride : idxAuto;
+  const t      = TARIFAS[idx] || tAuto;
+
   const movida = getMovida();
-  const iva   = facturaActual === 'A' ? t.precio * 0.21 : 0;
-  const total = t.precio + iva;
-  const neta  = Math.max(0, t.precio - movida);
-  const prest = neta * 0.6;
-  const avex  = neta * 0.4;
+  const iva    = facturaActual === 'A' ? t.precio * 0.21 : 0;
+  const total  = t.precio + iva;
+  const neta   = Math.max(0, t.precio - movida);
+  const prest  = neta * 0.6;
+  const avex   = neta * 0.4;
+
   document.getElementById('rPrice').textContent      = fmt(total);
   document.getElementById('rPriceLabel').textContent = facturaActual === 'A' ? 'Total al cliente (c/ IVA)' : 'Total al cliente (sin IVA)';
   document.getElementById('rTipo').textContent       = t.tipo;
-  document.getElementById('rTramo').textContent      = t.label;
+  document.getElementById('rTramo').textContent      = t.label + (tramoOverride !== null && tramoOverride !== idxAuto ? ' ✏️' : '');
   document.getElementById('rZona').textContent       = MOVIDA[zonaActual]?.nombre || zonaActual;
   document.getElementById('bBruta').textContent      = fmt(t.precio);
   document.getElementById('bIva').textContent        = iva > 0 ? '+ '+fmt(iva) : '—';
@@ -1208,6 +1246,7 @@ function updateRevenue(km) {
   document.getElementById('bAvex').textContent       = fmt(avex);
   document.getElementById('browIva').style.display   = iva > 0 ? '' : 'none';
   renderTabla(idx);
+  renderTramoManualPills(idx);
 }
 
 // ── MAPA ──────────────────────────────────────────────────────
@@ -1324,6 +1363,7 @@ async function calcularRuta(){
     document.getElementById('rKm').textContent    = km.toFixed(1)+' km';
     document.getElementById('rTiempo').textContent= fmtMin(secs);
     window._presData={origen:oIn.value,destino:dIn.value,oLat,oLon,dLat,dLon,km:km.toFixed(1),secs,coords};
+    tramoOverride = null; // resetear override al calcular nueva ruta
     updateRevenue(km);
     document.getElementById('resultWrap').classList.add('visible');
     document.getElementById('btnPresupuestoWrap').style.display='block';
@@ -1900,6 +1940,18 @@ document.addEventListener('keydown',e=>{if(e.key==='Escape')cerrarPresupuesto();
 
 
 // ── TARIFARIO EDITOR ──────────────────────────────────────────
+function resetearTarifario(){
+  if(!confirm('¿Restaurar el tarifario a los valores por defecto? Se perderán los cambios guardados.'))return;
+  localStorage.removeItem('avex-tarifas');
+  localStorage.removeItem('avex-movidas');
+  // Recargar desde defaults
+  TARIFAS.length=0; TARIFAS_DEFAULT.forEach(t=>TARIFAS.push({...t}));
+  Object.keys(MOVIDA).forEach(k=>delete MOVIDA[k]);
+  Object.assign(MOVIDA, JSON.parse(JSON.stringify(MOVIDA_DEFAULT)));
+  renderTarifario(); renderZonaPills(); renderTabla(-1);
+  alert('Tarifario restaurado.');
+}
+
 function renderTarifario() {
   renderFilasTarifas();
   renderFilasZonas();
@@ -1977,6 +2029,12 @@ function eliminarZona(key){
 }
 function guardarTarifario(){
   Object.keys(MOVIDA).forEach(k=>{ MOVIDA[k].label=`${fmt(MOVIDA[k].monto)} (${MOVIDA[k].nombre})`; });
+  // Mantener el último (Infinity) al final y ordenar el resto por max asc
+  TARIFAS.sort((a,b) => {
+    if (a.max === Infinity) return 1;
+    if (b.max === Infinity) return -1;
+    return a.max - b.max;
+  });
   localStorage.setItem('avex-tarifas',JSON.stringify(TARIFAS));
   localStorage.setItem('avex-movidas',JSON.stringify(MOVIDA));
   renderZonaPills(); renderTabla(-1); renderPreviewTarifario();
@@ -2885,6 +2943,13 @@ function initModoPrestador() {
 }
 
 // ── INIT ──────────────────────────────────────────────────────
+// Reset tarifas si no coincide con la versión actual
+const TARIFA_VERSION = 'v6';
+if (localStorage.getItem('avex-tarifa-ver') !== TARIFA_VERSION) {
+  localStorage.removeItem('avex-tarifas');
+  localStorage.setItem('avex-tarifa-ver', TARIFA_VERSION);
+}
+
 const esPrestador = initModoPrestador();
 if (!esPrestador) {
   try {
